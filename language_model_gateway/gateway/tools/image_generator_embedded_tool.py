@@ -26,10 +26,9 @@ class ImageGeneratorEmbeddedTool(BaseTool):
     description: str = (
         "Generates an image from a given text. "
         "Provide the text as input. "
-        "The tool will return the url to the image and a markdown containing a base64 encoded string in PNG format: `data:image/png;base64,{base64_image}`."
+        "The tool will return the url to the image of the generated diagram."
         # "The tool will return a url to the generated image."
     )
-    return_direct: bool = True
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
 
     image_generator_factory: ImageGeneratorFactory

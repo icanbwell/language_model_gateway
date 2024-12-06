@@ -90,6 +90,8 @@ class LangGraphToOpenAIConverter:
 
             event_type: str = event["event"]
 
+            # print(f"===== {event_type} =====\n{event}\n")
+
             match event_type:
                 case "on_chain_start":
                     # Handle the start of the chain event
@@ -98,6 +100,8 @@ class LangGraphToOpenAIConverter:
                     # Handle the chat model stream event
                     chunk: AIMessageChunk = event["data"]["chunk"]
                     content: str | list[str | dict[str, Any]] = chunk.content
+
+                    # print(f"chunk: {chunk}")
 
                     usage_metadata: Optional[UsageMetadata] = chunk.usage_metadata
                     total_usage_metadata = self.convert_usage_meta_data_to_openai(
@@ -130,6 +134,33 @@ class LangGraphToOpenAIConverter:
                 case "on_chain_end":
                     # Handle the end of the chain event
                     pass
+                case "on_tool_end":
+                    # Handle the end of the tool event
+                    tool_message: ToolMessage = event["data"]["output"]
+
+                    artifact: Optional[Any] = tool_message.artifact
+
+                    # print(f"on_tool_end: {tool_message}")
+
+                    if artifact:
+                        chat_stream_response = ChatCompletionChunk(
+                            id=request_id,
+                            created=int(time.time()),
+                            model=request["model"],
+                            choices=[
+                                ChunkChoice(
+                                    index=0,
+                                    delta=ChoiceDelta(
+                                        role="assistant", content=artifact
+                                    ),
+                                )
+                            ],
+                            usage=CompletionUsage(
+                                prompt_tokens=0, completion_tokens=0, total_tokens=0
+                            ),
+                            object="chat.completion.chunk",
+                        )
+                        yield f"data: {json.dumps(chat_stream_response.model_dump())}\n\n"
                 case _:
                     # Handle other event types
                     pass
@@ -187,10 +218,13 @@ class LangGraphToOpenAIConverter:
                     )
                 )
 
-                output_messages: List[ChatCompletionMessage] = [
+                output_messages_raw: List[ChatCompletionMessage | None] = [
                     langchain_to_chat_message(m)
                     for m in responses
                     if isinstance(m, AIMessage) or isinstance(m, ToolMessage)
+                ]
+                output_messages: List[ChatCompletionMessage] = [
+                    m for m in output_messages_raw if m is not None
                 ]
 
                 choices: List[Choice] = [

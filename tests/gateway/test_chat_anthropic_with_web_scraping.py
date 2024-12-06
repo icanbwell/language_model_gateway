@@ -1,7 +1,6 @@
 from typing import Optional
 
 import httpx
-import pytest
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletion
 
@@ -15,8 +14,7 @@ from tests.gateway.mocks.mock_chat_model import MockChatModel
 from tests.gateway.mocks.mock_model_factory import MockModelFactory
 
 
-@pytest.mark.asyncio
-async def test_chat_completions_with_web_search(
+async def test_chat_anthropic_with_web_scraping(
     async_client: httpx.AsyncClient,
 ) -> None:
 
@@ -26,7 +24,7 @@ async def test_chat_completions_with_web_search(
             ModelFactory,
             lambda c: MockModelFactory(
                 fn_get_model=lambda chat_model_config: MockChatModel(
-                    fn_get_response=lambda messages: "Donald Trump won the last US election"
+                    fn_get_response=lambda messages: "3800 Reservoir Road Northwest"
                 )
             ),
         )
@@ -43,10 +41,10 @@ async def test_chat_completions_with_web_search(
         messages=[
             {
                 "role": "user",
-                "content": "Who won the last US election?",
+                "content": "Get the doctor's address from https://www.medstarhealth.org/doctors/meggin-a-sabatino-dnp",
             }
         ],
-        model="Google Search",
+        model="Parse Web Page",
     )
 
     # print the top "choice"
@@ -55,4 +53,4 @@ async def test_chat_completions_with_web_search(
     )
     assert content is not None
     print(content)
-    assert "Trump" in content
+    assert "3800 Reservoir" in content

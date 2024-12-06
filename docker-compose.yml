@@ -12,11 +12,11 @@ services:
       AGENT_URL: 'http://host.docker.internal:5055/api/v1'
       OPENAI_AGENT_URL: 'http://host.docker.internal:5055/api/v1'
       DEFAULT_PATIENT_ID: "eEooRVLYdWIW753OhZUd1dgxQRny4KCo6fiH-13lY0043"
-      DEFAULT_WEB_SEARCH_TOOL: "duckduckgo_search"
+#      DEFAULT_WEB_SEARCH_TOOL: "duckduckgo_search"
+      DEFAULT_WEB_SEARCH_TOOL: "google_search"
       RUN_TESTS_WITH_REAL_LLM: 0
       IMAGE_GENERATION_PATH: "/usr/src/language_model_gateway/image_generation"
       IMAGE_GENERATION_URL: "http://localhost:5050/image_generation"
-#      DEFAULT_WEB_SEARCH_TOOL: "google_search"
     env_file: docker.env
     ports:
       - '5050:5000'

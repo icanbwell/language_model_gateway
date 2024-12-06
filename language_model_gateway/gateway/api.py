@@ -57,6 +57,28 @@ def create_app() -> FastAPI:
     app1.include_router(ChatCompletionsRouter().get_router())
     app1.include_router(ModelsRouter().get_router())
     app1.include_router(ImageGenerationRouter().get_router())
+    # Mount the static directory
+    app1.mount(
+        "/static",
+        StaticFiles(
+            directory="/usr/src/language_model_gateway/language_model_gateway/static"
+        ),
+        name="static",
+    )
+
+    image_generation_path: str = environ["IMAGE_GENERATION_PATH"]
+
+    assert (
+        image_generation_path is not None
+    ), "IMAGE_GENERATION_PATH environment variable must be set"
+
+    makedirs(image_generation_path, exist_ok=True)
+
+    app1.mount(
+        "/image_generation",
+        StaticFiles(directory=image_generation_path),
+        name="static",
+    )
     return app1
 
 
@@ -67,30 +89,6 @@ app = create_app()
 @app.get("/health")
 async def health() -> str:
     return "OK"
-
-
-# Mount the static directory
-app.mount(
-    "/static",
-    StaticFiles(
-        directory="/usr/src/language_model_gateway/language_model_gateway/static"
-    ),
-    name="static",
-)
-
-image_generation_path: str = environ["IMAGE_GENERATION_PATH"]
-
-assert (
-    image_generation_path is not None
-), "IMAGE_GENERATION_PATH environment variable must be set"
-
-makedirs(image_generation_path, exist_ok=True)
-
-app.mount(
-    "/image_generation",
-    StaticFiles(directory=image_generation_path),
-    name="static",
-)
 
 
 @app.get("/favicon.png", include_in_schema=False)

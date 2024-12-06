@@ -31,7 +31,7 @@ def convert_message_content_to_string(content: str | list[str | Dict[str, Any]])
     return "".join(text)
 
 
-def langchain_to_chat_message(message: BaseMessage) -> ChatCompletionMessage:
+def langchain_to_chat_message(message: BaseMessage) -> Optional[ChatCompletionMessage]:
     """Create a ChatMessage from a LangChain message."""
     match message:
         case SystemMessage():
@@ -53,19 +53,21 @@ def langchain_to_chat_message(message: BaseMessage) -> ChatCompletionMessage:
             #     ai_message.response_metadata = message.response_metadata
             return ai_message
         case ToolMessage():
-            content: str = convert_message_content_to_string(message.content)
+            # content: str = convert_message_content_to_string(message.content)
             artifact: str = message.artifact
-            ai_message = ChatCompletionMessage(
-                role="assistant",
-                content=content,
-            )
-            return ai_message
+            if artifact:
+                ai_message = ChatCompletionMessage(
+                    role="assistant",
+                    content=artifact,
+                )
+                return ai_message
         case LangchainChatMessage():
             assert (
                 False
             ), "Chat messages should not be converted to ChatCompletionMessage"
         case _:
             raise ValueError(f"Unsupported message type: {message.__class__.__name__}")
+    return None
 
 
 def remove_tool_calls(

@@ -27,7 +27,7 @@ services:
       IMAGE_GENERATION_ENGINE: "openai"
       IMAGES_OPENAI_API_BASE_URL: "http://dev:5000/api/v1"
       IMAGES_OPENAI_API_KEY: "bedrock"
-      IMAGE_GENERATION_MODEL: "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+      IMAGE_GENERATION_MODEL: "amazon.titan-image-generator-v2:0"
       LOAD_PROMPT_FROM_LANGCHAIN_HUB: False
       WEBUI_FAVICON_URL: "http://dev:5000/favicon.png"
       WEBUI_NAME: "b.ai"

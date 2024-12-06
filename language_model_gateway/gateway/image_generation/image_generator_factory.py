@@ -13,5 +13,11 @@ class ImageGeneratorFactory:
                 )
 
                 return AwsImageGenerator()
+            case "dall-e-3":
+                from language_model_gateway.gateway.image_generation.aws_image_generator import (
+                    AwsImageGenerator,
+                )
+
+                return AwsImageGenerator()
             case _:
                 raise ValueError(f"Unsupported model_name: {model_name}")

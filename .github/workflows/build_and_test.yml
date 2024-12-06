@@ -27,11 +27,58 @@ jobs:
       - name: pre-commit
         run: make run-pre-commit && make clean-pre-commit
 
+      - name: Set correct permissions for tests
+        run: |
+          sudo chmod -R 777 ${{ github.workspace }}
+
+      - name: Create reports output folder
+        run: |
+          mkdir -p ${{ github.workspace }}/reports
+          chmod -R 777 ${{ github.workspace }}/reports
+
+
       # setup and install everything and run tests
       - name: up
         run: make up
+
       - name: tests
-        run: make tests
+        run: |
+          docker compose run --rm --name language_model_gateway_tests -v ${{ github.workspace }}/reports:/reports dev pytest . --tb=auto --junitxml=/reports/test-results.xml
+
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: ${{ github.workspace }}/reports/**/*.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
+
+      - name: Verify reports are generated
+        if: ${{ always() }}
+        run: ls -halt ${{ github.workspace }}/reports/
+
+      # Publish all test results in the GitHub UI
+      - name: Surface failing tests
+        if: always()
+        uses: pmeier/pytest-results-action@main # https://github.com/pmeier/pytest-results-action
+        with:
+          # A list of JUnit XML files, directories containing the former, and wildcard
+          # patterns to process.
+          # See @actions/glob for supported patterns.
+          path: ${{ github.workspace }}/reports/*.xml
+
+          # (Optional) Add a summary of the results at the top of the report
+          summary: true
+
+          # (Optional) Select which results should be included in the report.
+          # Follows the same syntax as `pytest -r`
+          display-options: fEX
+
+          # (Optional) Fail the workflow if no JUnit XML was found.
+          fail-on-empty: true
+
+          # (Optional) Title of the test results section in the workflow summary
+          title: Test results
 
       - name: Cleanup
         if: always()

@@ -1,6 +1,9 @@
 import aiohttp
-from bs4 import BeautifulSoup
 from langchain.tools import BaseTool
+
+from language_model_gateway.gateway.utilities.html_to_markdown_converter import (
+    HtmlToMarkdownConverter,
+)
 
 
 class URLToMarkdownTool(BaseTool):
@@ -34,25 +37,8 @@ class URLToMarkdownTool(BaseTool):
                     response.raise_for_status()
                     html_content = await response.text()
 
-            soup = BeautifulSoup(html_content, "html.parser")
-
-            # Extract the main content (e.g., headings and paragraphs)
-            markdown_content = ""
-            for element in soup.find_all(
-                ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "li"]
-            ):
-                if element.name.startswith("h"):
-                    level = element.name[1]
-                    markdown_content += (
-                        f"{'#' * int(level)} {element.get_text().strip()}\n\n"
-                    )
-                elif element.name == "p":
-                    markdown_content += f"{element.get_text().strip()}\n\n"
-                elif element.name in ["ul", "ol"]:
-                    for li in element.find_all("li"):
-                        prefix = "-" if element.name == "ul" else "1."
-                        markdown_content += f"{prefix} {li.get_text().strip()}\n"
-
-            return markdown_content.strip()
+            return await HtmlToMarkdownConverter.get_markdown_from_html_async(
+                html_content=html_content
+            )
         except Exception as e:
             raise ValueError(f"Failed to fetch or process the URL: {str(e)}")

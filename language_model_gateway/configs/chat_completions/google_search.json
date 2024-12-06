@@ -11,6 +11,9 @@
   "tools": [
     {
       "name": "google_search"
+    },
+    {
+      "name": "scraping_bee_web_scraper"
     }
   ]
 }

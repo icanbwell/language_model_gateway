@@ -1,24 +1,25 @@
 import httpx
-import pytest
-from openai import OpenAI
-from openai.pagination import SyncPage
+from openai import AsyncOpenAI
+from openai.pagination import AsyncPage
 from openai.types import Model
 
 
-@pytest.mark.asyncio
-async def test_models(
-    async_client: httpx.AsyncClient, sync_client: httpx.Client
-) -> None:
+async def test_models(async_client: httpx.AsyncClient) -> None:
     # init client and connect to localhost server
     # init client and connect to localhost server
-    client = OpenAI(
+    client = AsyncOpenAI(
         api_key="fake-api-key",
         base_url="http://localhost:5000/api/v1",  # change the default port if needed
-        http_client=sync_client,
+        http_client=async_client,
     )
-    models: SyncPage[Model] = client.models.list()
+    models: AsyncPage[Model] = await client.models.list()
     print(models.model_dump_json())
     assert models
-    for model in models:
+    mode: Model
+    i = 0
+    async for model in models:
+        i += 1
         print(model.id)
         assert model.id
+
+    assert i > 0, f"Expected at least one model, but got {i}"

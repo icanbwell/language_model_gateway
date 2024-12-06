@@ -1,4 +1,5 @@
 import logging
+from typing import Literal, Tuple
 
 from langchain.tools import BaseTool
 
@@ -27,10 +28,10 @@ class ImageGeneratorTool(BaseTool):
         # "The tool will return the image as a base64 encoded string in PNG format: `data:image/png;base64,{base64_image}`."
         "The tool will return a url to the generated image."
     )
-    return_direct: bool = True
+    response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
     image_generator_factory: ImageGeneratorFactory
 
-    def _run(self, prompt: str) -> str:
+    def _run(self, prompt: str) -> Tuple[str, str]:
         """
         Synchronous version of the tool (falls back to async implementation).
         :param prompt: The URL of the webpage to fetch.
@@ -38,7 +39,7 @@ class ImageGeneratorTool(BaseTool):
         """
         raise NotImplementedError("Use async version of this tool")
 
-    async def _arun(self, prompt: str) -> str:
+    async def _arun(self, prompt: str) -> Tuple[str, str]:
         """
         Asynchronous version of the tool.
         :param prompt: The URL of the webpage to fetch.
@@ -57,7 +58,7 @@ class ImageGeneratorTool(BaseTool):
             image_file_path = ImageGenerationHelper.get_full_path()
             image_generator.save_image(image_data, image_file_path)
             url = ImageGenerationHelper.get_url_for_file_name(image_file_path)
-            return url
+            return url, url
         except Exception as e:
             logger.error(f"Failed to generate image: {str(e)}")
             raise ValueError(f"Failed to generate image: {str(e)}")

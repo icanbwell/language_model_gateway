@@ -28,7 +28,6 @@ class GraphVizDiagramGeneratorTool(BaseTool):
         "}"
         "This will generate a directed graph with three nodes: A, B, and C."
     )
-    return_direct: bool = True
 
     def _run(self, dot_input: str) -> str:
         """

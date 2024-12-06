@@ -3,7 +3,7 @@ from typing import List
 
 import httpx
 from httpx import Response
-from openai import OpenAI
+from openai import AsyncOpenAI, AsyncStream
 from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletionChunk
 from pytest_httpx import HTTPXMock, IteratorStream
@@ -15,7 +15,7 @@ from openai.types.chat.chat_completion_chunk import ChoiceDelta, Choice as Chunk
 
 
 async def test_chat_completions_streaming(
-    async_client: httpx.AsyncClient, sync_client: httpx.Client, httpx_mock: HTTPXMock
+    async_client: httpx.AsyncClient, httpx_mock: HTTPXMock
 ) -> None:
     if not EnvironmentReader.is_environment_variable_set("RUN_TESTS_WITH_REAL_LLM"):
         chunks_json: List[ChatCompletionChunk] = [
@@ -81,16 +81,19 @@ async def test_chat_completions_streaming(
         )
 
     # init client and connect to localhost server
-    client = OpenAI(
+    client = AsyncOpenAI(
         api_key="fake-api-key",
         base_url="http://localhost:5000/api/v1",  # change the default port if needed
-        http_client=sync_client,
+        http_client=async_client,
     )
 
-    stream = client.chat.completions.create(
+    stream: AsyncStream[ChatCompletionChunk] = await client.chat.completions.create(
         model="b.well PHR",
         messages=[{"role": "user", "content": "Say this is a test"}],
         stream=True,
     )
-    for chunk in stream:
-        print(chunk.choices[0].delta.content or "")
+    async for chunk in stream:
+        delta_content = "\n".join(
+            [choice.delta.content or "" for choice in chunk.choices]
+        )
+        print(delta_content)
