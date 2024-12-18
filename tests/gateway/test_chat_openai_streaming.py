@@ -34,7 +34,7 @@ async def test_chat_completions_streaming(
             ChatCompletionChunk(
                 id=str(0),
                 created=1633660000,
-                model="b.well PHR",
+                model="ChatGPT",
                 choices=[
                     ChunkChoice(
                         index=0,
@@ -49,7 +49,7 @@ async def test_chat_completions_streaming(
             ChatCompletionChunk(
                 id=str(0),
                 created=1633660000,
-                model="b.well PHR",
+                model="ChatGPT",
                 choices=[
                     ChunkChoice(
                         index=0,
@@ -64,7 +64,7 @@ async def test_chat_completions_streaming(
             ChatCompletionChunk(
                 id=str(0),
                 created=1633660000,
-                model="b.well PHR",
+                model="ChatGPT",
                 choices=[
                     ChunkChoice(
                         index=0,
@@ -99,8 +99,8 @@ async def test_chat_completions_streaming(
         [
             ChatModelConfig(
                 id="b_well_phr",
-                name="b.well PHR",
-                description="b.well PHR",
+                name="ChatGPT",
+                description="ChatGPT",
                 type="openai",
                 model=ModelConfig(
                     provider="bedrock",
@@ -135,7 +135,7 @@ async def test_chat_completions_streaming(
     )
 
     stream: AsyncStream[ChatCompletionChunk] = await client.chat.completions.create(
-        model="b.well PHR",
+        model="ChatGPT",
         messages=[{"role": "user", "content": "Say this is a test"}],
         stream=True,
     )

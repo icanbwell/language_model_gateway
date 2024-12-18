@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/imranq2/language_model_gateway/main/language_model_gateway/configs/config_schema.json",
+  "id": "chat_gpt",
+  "name": "ChatGPT (No PHI)",
+  "description": "This is a general purpose language model that can be used for a wide variety of tasks.  No PHI is allowed in this model.",
+  "type": "langchain",
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o"
+  },
+  "system_prompts": [
+    {
+      "role": "system",
+      "content": "You are a tool that answers questions and generates text.  Let’s think step by step and take your time to get the right answer."
+    }
+  ],
+  "model_parameters": [
+    {
+      "key": "temperature",
+      "value": 0.5
+    },
+    {
+      "key": "max_tokens",
+      "value": 1000
+    }
+  ],
+  "tools": [
+    {
+      "name": "current_date",
+      "parameters": [
+        {
+          "key": "format",
+          "value": "YYYY-MM-DD"
+        }
+      ]
+    },
+    {
+      "name": "web_search"
+    },
+    {
+      "name": "image_generator_openai"
+    },
+    {
+      "name": "get_web_page"
+    },
+    {
+      "name": "scraping_bee_web_scraper"
+    }
+  ],
+  "example_prompts": [
+    {
+      "role": "user",
+      "content": "What is the capital of France?"
+    },
+    {
+      "role": "user",
+      "content": "Generate a photo of a baby holding a car."
+    }
+  ]
+}

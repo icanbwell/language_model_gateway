@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import override, Dict, Any
+from typing import override, Dict, Any, Literal
 
 import boto3
 
@@ -37,7 +37,13 @@ class AwsImageGenerator(ImageGenerator):
 
     @override
     async def generate_image_async(
-        self, prompt: str, style: str = "natural", image_size: str = "1024x1024"
+        self,
+        *,
+        prompt: str,
+        style: Literal["natural", "cinematic", "digital-art", "pop-art"] = "natural",
+        image_size: Literal[
+            "256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"
+        ] = "1024x1024",
     ) -> bytes:
         """Generate an image using Titan Image Generator"""
         if os.environ.get("LOG_INPUT_AND_OUTPUT", "0") == "1":

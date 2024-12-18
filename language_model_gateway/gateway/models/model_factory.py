@@ -50,10 +50,11 @@ class ModelFactory:
         logger.debug(f"Creating ChatModel with parameters: {model_parameters_dict}")
         model_parameters_dict["model"] = model_name
         # model_parameters_dict["streaming"] = True
-        llm: BaseChatModel = (
-            ChatOpenAI(**model_parameters_dict)
-            if model_vendor == "openai"
-            else ChatBedrockConverse(
+        llm: BaseChatModel
+        if model_vendor == "openai":
+            llm = ChatOpenAI(**model_parameters_dict)
+        elif model_config.provider == "bedrock":
+            llm = ChatBedrockConverse(
                 client=None,
                 provider="anthropic",
                 credentials_profile_name=os.environ.get("AWS_CREDENTIALS_PROFILE"),
@@ -61,5 +62,11 @@ class ModelFactory:
                 # Setting temperature to 0 for deterministic results
                 **model_parameters_dict,
             )
-        )
+        elif model_config.provider == "openai":
+            llm = ChatOpenAI(**model_parameters_dict)
+        else:
+            raise ValueError(
+                f"Unsupported model vendor: {model_vendor} and model_provider: {model_config.provider} for {model_name}"
+            )
+
         return llm

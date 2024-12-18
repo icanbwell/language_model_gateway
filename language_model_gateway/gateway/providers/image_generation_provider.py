@@ -71,7 +71,7 @@ class ImageGenerationProvider(BaseImageGenerationProvider):
 
         image_generator: ImageGenerator = (
             self.image_generator_factory.get_image_generator(
-                model_name=str(model) if model else "aws"
+                model_name="openai" if model == "openai" else "aws"
             )
         )
 

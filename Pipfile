@@ -19,9 +19,9 @@ ariadne = ">=0.23.0"
 # fastapi is a Python library for building APIs
 fastapi = ">=0.115.6"
 # boto3 is a Python library for interacting with AWS services
-boto3 = ">=1.35.77"
+boto3 = ">=1.35.84"
 # uvicorn is a Python library for running ASGI applications
-uvicorn = ">=0.32.1"
+uvicorn = ">=0.34.0"
 # ddtrace is a Python library for tracing requests
 ddtrace = ">=2.17.2"
 # prometheus-fastapi-instrumentator is a Python library for instrumenting FastAPI applications
@@ -33,7 +33,7 @@ httpx = ">=0.28.1"
 # httpx-sse is a Python library for making Server-Sent Events requests
 httpx-sse = ">=0.4.0"
 # langchain is a Python library for building language models
-langchain = ">=0.3.9"
+langchain = ">=0.3.13"
 # pydantic is a Python library for data validation
 pydantic = ">=2.0,<3.0.0"  # needed by langchain
 # langchain-core is a Python library for building language models
@@ -41,17 +41,17 @@ langchain-core = ">=0.3.21"
 # langchain-aws is a Python library for interacting with AWS services
 langchain-aws = ">=0.2.9"
 # openai is a Python library for interacting with OpenAI
-openai = ">=1.57.0"
+openai = ">=1.58.1"
 # langchain-openai is a Python library for interacting with OpenAI
 langchain-openai = ">=0.2.12"
 # langchain-community is a Python library that contains ommmunity extensions
-langchain-community = ">=0.3.8"
+langchain-community = ">=0.3.12"
 # grpcio is a Python library for working with gRPC.   Needed by Google Vertex AI
 grpcio = { version = "==1.66.0", index = "alpine-wheels" }
 # langchain-google-community is a Python library that contains Google community extensions
 langchain-google-community = ">=2.0.3"
 # langgraph is a Python library for building language models
-langgraph = ">=0.2.53"
+langgraph = ">=0.2.60"
 # langchainhub is a Python library for interacting with the LangChainHub API
 langchainhub = ">=0.1.21"
 # furl is a Python library for working with URLs
@@ -97,11 +97,11 @@ mypy = ">=1.13.0"
 # pytest is a Python library for running tests
 pytest = ">=8.3.3"
 # pytest-asyncio is a Python library for running asyncio tests
-pytest-asyncio = ">=0.24.0"
+pytest-asyncio = ">=0.25.0"
 # black is a Python library for formatting code
 black = ">=24.10.0"
 # deepdiff is a Python library for comparing objects
-deepdiff = { version = ">=8.0.1", extras = ["murmur"] }
+deepdiff = { version = ">=8.1.1", extras = ["murmur"] }
 types-requests = "*"
 # pytest-httpx is a Python library for mocking HTTPX tests
 pytest-httpx = ">=0.35.0"
@@ -110,7 +110,7 @@ types-beautifulsoup4 = ">=4.12.0.20241020"
 # types-cachetools is a Python library for typing cachetools
 types-cachetools = ">=5.5.0"
 # moto is a Python library for mocking AWS services
-moto = { version = ">=5.0.22", extras = ["s3"] }
+moto = { version = ">=5.0.23", extras = ["s3"] }
 
 [requires]
 python_version = "3.12"

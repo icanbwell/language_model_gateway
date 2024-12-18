@@ -75,6 +75,12 @@ class ToolProvider:
             "image_generator": ImageGeneratorTool(
                 image_generator_factory=image_generator_factory,
                 file_manager_factory=file_manager_factory,
+                model_provider="aws",
+            ),
+            "image_generator_openai": ImageGeneratorTool(
+                image_generator_factory=image_generator_factory,
+                file_manager_factory=file_manager_factory,
+                model_provider="openai",
             ),
             "graph_viz_diagram_generator": GraphVizDiagramGeneratorTool(
                 file_manager_factory=file_manager_factory

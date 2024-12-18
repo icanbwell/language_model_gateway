@@ -1,3 +1,4 @@
+import base64
 import logging
 import os
 from typing import Literal, Tuple, Type, Optional
@@ -41,6 +42,12 @@ class ImageGeneratorTool(BaseTool):
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
     image_generator_factory: ImageGeneratorFactory
     file_manager_factory: FileManagerFactory
+    model_provider: Literal["aws", "openai"]
+    image_size: Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"] = (
+        "1024x1024"
+    )
+    style: Literal["natural", "cinematic", "digital-art", "pop-art"] = "natural"
+    return_embedded_image: bool = False
 
     def _run(self, prompt: str) -> Tuple[str, str]:
         """
@@ -58,12 +65,12 @@ class ImageGeneratorTool(BaseTool):
         """
         try:
             image_generator: ImageGenerator = (
-                self.image_generator_factory.get_image_generator(model_name="aws")
+                self.image_generator_factory.get_image_generator(
+                    model_name=self.model_provider
+                )
             )
-            # styles = ["natural", "cinematic", "digital-art", "pop-art"]
-            style = "natural"
             image_data: bytes = await image_generator.generate_image_async(
-                prompt=prompt, style=style, image_size="1024x1024"
+                prompt=prompt, style=self.style, image_size=self.image_size
             )
             # base64_image: str = base64.b64encode(image_data).decode("utf-8")
             image_generation_path_ = os.environ["IMAGE_GENERATION_PATH"]
@@ -82,24 +89,33 @@ class ImageGeneratorTool(BaseTool):
             if file_path is None:
                 return (
                     f"Failed to save image to disk",
-                    f"ImageGeneratorTool: Failed to save image to disk from prompt: {prompt}",
+                    f"ImageGeneratorTool[{self.model_provider}]: Failed to save image to disk from prompt: {prompt}",
                 )
 
             url: Optional[str] = UrlParser.get_url_for_file_name(image_file_name)
             if url is None:
                 return (
                     f"Failed to save image to disk",
-                    f"ImageGeneratorTool: Failed to save image to disk from prompt: {prompt}",
+                    f"ImageGeneratorTool[{self.model_provider}]: Failed to save image to disk from prompt: {prompt}",
                 )
 
-            return (
-                url,
-                f"ImageGeneratorTool: Generated image from prompt: {prompt}: <{url}> ",
-            )
+            if self.return_embedded_image:
+                base64_image: str = base64.b64encode(image_data).decode("utf-8")
+                embedded_url = f"data:image/png;base64,{base64_image}"
+                markdown_image = f"![Generated Image]({embedded_url})"
+                return (
+                    url,
+                    f"ImageGeneratorTool[{self.model_provider}]: Generated image from prompt: {prompt}: {markdown_image} ",
+                )
+            else:
+                return (
+                    url,
+                    f"ImageGeneratorTool[{self.model_provider}]: Generated image from prompt: {prompt}: <{url}> ",
+                )
         except Exception as e:
             logger.error(f"Failed to generate image: {str(e)}")
             logger.exception(e, stack_info=True)
             return (
                 f"Failed to generate image: {e}",
-                f"ImageGeneratorTool: Failed to generate image from prompt: {prompt}",
+                f"ImageGeneratorTool[{self.model_provider}]: Failed to generate image from prompt: {prompt}",
             )

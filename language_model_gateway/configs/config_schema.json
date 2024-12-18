@@ -203,6 +203,7 @@
                   "get_web_page",
                   "arxiv_search",
                   "image_generator",
+                  "image_generator_openai",
                   "graph_viz_diagram_generator",
                   "sequence_diagram_generator",
                   "flow_chart_generator",
