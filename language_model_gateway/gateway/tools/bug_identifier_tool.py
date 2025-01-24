@@ -1,6 +1,6 @@
 from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
 from pydantic import BaseModel, Field
-from typing import Type, Optional, List, Tuple, Literal
+from typing import Type, Optional, Tuple, Literal
 
 
 class BugIdentifierModel(BaseModel):
@@ -40,23 +40,21 @@ class BugIdentifierTool(ResilientBaseTool):
     This tool leverages advanced language processing and data integration to enhance debugging efficiency and streamline the problem-solving workflow.
     """
 
-    args_schema: Type[BaseModel] = BugIdentifierModel  # Should be the input parameters class you created above
+    args_schema: Type[BaseModel] = (
+        BugIdentifierModel  # Should be the input parameters class you created above
+    )
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
 
     # You can define any other initialization parameters to your class.  These are not passed by the LLM but we can pass them
     # during initialization
 
-    async def _arun(
-        self,
-        error_details: Optional[str] = None
-    ) -> Tuple[str, str]:
+    async def _arun(self, error_details: Optional[str] = None) -> Tuple[str, str]:
         # do your actual work here
-        return error_details if error_details else "No error parsed", "artifact that is not given to LLM but shown in the UI"
+        return (
+            error_details if error_details else "No error parsed"
+        ), "artifact that is not given to LLM but shown in the UI"
 
-    def _run(
-        self,
-        error_details: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def _run(self, error_details: Optional[str] = None) -> Tuple[str, str]:
         """
         Synchronous version of the tool (falls back to async implementation).
 
