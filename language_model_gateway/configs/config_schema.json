@@ -214,7 +214,8 @@
                   "pdf_text_extractor ",
                   "github_pull_request_analyzer",
                   "github_pull_request_diff",
-                  "jira_issues_analyzer"
+                  "jira_issues_analyzer",
+                  "bug_identifier"
                 ]
               },
               {
@@ -278,7 +279,8 @@
                   "pdf_text_extractor ",
                   "github_pull_request_analyzer",
                   "github_pull_request_diff",
-                  "jira_issues_analyzer"
+                  "jira_issues_analyzer",
+                  "bug_identifier"
                 ]
               },
               {
