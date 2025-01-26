@@ -18,6 +18,9 @@ from language_model_gateway.gateway.ocr.ocr_extractor_factory import OCRExtracto
 from language_model_gateway.gateway.tools.current_time_tool import CurrentTimeTool
 from langchain_community.tools.pubmed.tool import PubmedQueryRun
 
+from language_model_gateway.gateway.tools.bug_identifier_tool import (
+    BugIdentifierTool,
+)
 from language_model_gateway.gateway.tools.er_diagram_generator_tool import (
     ERDiagramGeneratorTool,
 )
@@ -89,6 +92,9 @@ class ToolProvider:
 
         self.tools: Dict[str, BaseTool] = {
             "current_date": CurrentTimeTool(),
+            "bug_identifier": BugIdentifierTool(
+                file_manager_factory=file_manager_factory
+            ),
             "web_search": web_search_tool,
             "pubmed": PubmedQueryRun(),
             "google_search": GoogleSearchTool(),

@@ -1,0 +1,46 @@
+{
+    "$schema": "https://raw.githubusercontent.com/imranq2/language_model_gateway/main/language_model_gateway/configs/config_schema.json",
+    "id": "bug_resolution_prompt",
+    "name": "Bug Resolution Prompt",
+    "description": "An AI assistant to finds possible solutions for a bug, taking error stacktrace as input and an aim to provide high accuracy.",
+    "owner": "Sumit Lohan, Deep Jha, RitujAryan",
+    "type": "langchain",
+    "model": {
+        "provider": "bedrock",
+        "model": "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+    },
+    "system_prompts": [
+        {
+            "role": "system",
+            "content": "You are an advanced error resolution assistant with expertise in analyzing and resolving software bugs. Your primary objective is to provide precise, actionable solutions for error messages. Follow these strict guidelines:\n\n1. Error Analysis Process:\n   - Carefully examine the provided error message or stack trace\n   - Identify the primary error line and its core issue\n\n2. CSV Database Matching:\n   - Use the bug_identifier tool to retrieve the CSV database\n   - Perform a comprehensive match against the CSV's 'Description' column\n   - IMPORTANT: Multiple matching rows are possible\n   - Matching criteria:\n     a) Exact keyword matches\n     b) Partial matches with high semantic similarity\n     c) Context-aware comparisons considering error type and structure\n\n3. Resolution Strategy:\n   - If exact matches are found in the CSV:\n     * Collect ALL matching entries\n     * For EACH matching entry:\n       - Extract the EXACT 'Root Cause' text\n       - Include the associated 'Jira Ticket ID'\n     * Confidence Level: High\n     * DO NOT perform web search\n\n   - If no CSV matches or confidence is Low/Medium:\n     * Utilize web_search tool for potential solutions\n     * Gather insights from multiple sources\n     * Confidence Level: Medium to Low\n\n4. Output Formatting:\n   Provide a structured response with the following mandatory sections:\n   - Solutions: [Array of detailed root causes from matching CSV entries]\n   - Jira Ticket IDs: [Array of ticket IDs or 'None']\n   - Source:\n     * 'Internal CSV' if solution from bug database\n     * 'Web Search' if solution from online research\n   - Confidence Level:\n     * High (Multiple Exact CSV matches)\n     * Medium (Partial CSV match)\n     * Low (Speculative or limited information)\n\nExample Output Format:\nSolutions:\n1. [Exact root cause from first CSV match]\n2. [Exact root cause from second CSV match]\nJira Ticket IDs: [DFP-3717, DFP-3718]\nSource: Internal CSV\nConfidence: High\n\nRemember: Precision, clarity, and actionable insights are your primary goals. Prioritize internal CSV matches and provide exact, verbatim root causes."
+        }
+    ],
+    "tools": [
+        {
+            "name": "bug_identifier"
+        },
+        {
+            "name": "web_search"
+        }
+    ],
+    "example_prompts": [
+        {
+            "role": "user",
+            "content": "at org.apache.spark.scheduler.Task.run(Task.scala:141)\n    at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$4(Executor.scala:620)\n    at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:64)\n    at org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:61)\n    at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:94)\n    at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:623)\n    at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)\n    at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)\n    ... 1 more\nCaused by: java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 's3://bwell-ingestion/preprocessed/thedacare_internal_employee/Th' for key 'PRIMARY'\n    at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:118)\n    at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)\n    at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:916)\n    at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1061)\n    at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1009)\n    at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1320)\n    at com.mysql.cj.jdbc.ClientPreparedStatement.executeBatchWithMultiValuesClause(ClientPreparedStatement.java:679)\n    ... 19 more"
+        },
+        {
+            "role": "user",
+            "content": "java.lang.OutOfMemoryError: Java heap space\n    at org.apache.spark.memory.MemoryManager.allocateMemory(MemoryManager.scala:324)\n    at org.apache.spark.storage.BlockManager.doGetBlockData(BlockManager.scala:456)\n    at org.apache.spark.storage.BlockManager.getBlockData(BlockManager.scala:402)\n    at org.apache.spark.storage.BlockManager.getLocalBytes(BlockManager.scala:275)\n    at org.apache.spark.storage.BlockManager.getBytes(BlockManager.scala:234)\n    at org.apache.spark.storage.BlockManager.get(BlockManager.scala:210)\n    at org.apache.spark.rdd.RDD.getOrCompute(RDD.scala:345)\n    at org.apache.spark.rdd.RDD.iterator(RDD.scala:286)\n    at org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:898)\n    ... more"
+        }
+    ],
+    "model_parameters": [
+        {
+            "key": "max_tokens",
+            "value": "1000"
+        },
+        {
+            "key": "temperature",
+            "value": "0.3"
+        }
+    ]
+}
