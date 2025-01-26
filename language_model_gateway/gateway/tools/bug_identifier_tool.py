@@ -1,6 +1,16 @@
-from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
+import logging
+from typing import Type, Literal, Tuple, Optional
+import os
 from pydantic import BaseModel, Field
-from typing import Type, Optional, Tuple, Literal
+from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
+from language_model_gateway.gateway.file_managers.file_manager import FileManager
+from language_model_gateway.gateway.file_managers.file_manager_factory import (
+    FileManagerFactory,
+)
+from starlette.responses import Response, StreamingResponse
+from language_model_gateway.gateway.utilities.s3_url import S3Url
+
+logger = logging.getLogger(__name__)
 
 
 class BugIdentifierModel(BaseModel):
@@ -11,50 +21,110 @@ class BugIdentifierModel(BaseModel):
     error_details: Optional[str] = Field(
         default=None,
         description=(
-            "Optional error details to identify bug root cause and it's fix. "
+            "Error details to identify bug root cause to search through the CSV retrieved or web"
             "PARSING INSTRUCTION: Extract exact error details from the query. "
         ),
+    )
+    use_verbose_logging: Optional[bool] = Field(
+        default=False,
+        description="Whether to enable verbose logging",
     )
 
 
 class BugIdentifierTool(ResilientBaseTool):
     """
-    This tool can be used to debug an error if it has already been encountered and fixed earlier.
-    If it is the first occurrence, then it will provide the error details and a probable fix.
-
+    The BugIdentifierTool is designed to provide intelligent bug resolution support by processing
+    a centralized bug database stored in S3. This tool specializes in matching user-reported
+    error messages against a comprehensive bug resolution database to provide accurate,
+    actionable solutions.
     """
 
     name: str = "bug_identifier"
 
     description: str = """
-    The BugIdentifierTool is designed to assist users by diagnosing errors or tracebacks provided by the user.
-    
     Features:
-    - Accepts user prompts containing error messages or stack trace details.
-    - Integrates with business logic to access a CSV file stored on S3, containing columns for Jira ticket ID, description, and root cause.
-    - Constructs a list of tuples from the CSV file, where each tuple contains a Jira ticket ID, description, and corresponding root cause.
-    - Utilizes a language model API to analyze the user's prompt in conjunction with the CSV data, searching for matching entries based on the given error or traceback.
-    - If a matching entry is found, it returns the associated Jira ticket ID and root cause to the user, aiding in the error resolution process.
-    - In cases where no similar entry is found, the tool provides the user with the error details and suggests a probable fix, based on available data and analysis.
+    - Accepts error messages or stack traces from various input formats
+    - Retrieves bug resolution data from a centralized CSV file in S3
+    - Performs comprehensive matching against error descriptions in the CSV
+    - Extracts root cause, Jira ticket ID, and resolution details
+    - Implements fallback web search mechanism for unresolved errors
+    - Generates structured resolution output with confidence scoring
+    - Supports multiple error input types:
+      * Multi-line stack traces
+      * Single error lines
+      * Generic human-language error descriptions
 
-    This tool leverages advanced language processing and data integration to enhance debugging efficiency and streamline the problem-solving workflow.
+    Matching Capabilities:
+    - Semantic error message matching
+    - Keyword-based searching in CSV database
+    - Partial and context-aware matching techniques
+    - Automatic web search for unmatched errors
+
+    Output Characteristics:
+    - Provides solution from internal CSV database
+    - Fallback to web search if no direct match found
+    - Generates structured resolution format
+    - Includes confidence level assessment
     """
 
     args_schema: Type[BaseModel] = (
         BugIdentifierModel  # Should be the input parameters class you created above
     )
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
+    file_manager_factory: FileManagerFactory
+    bug_csv_file_path: Optional[str] = os.environ.get("BUG_FILE_S3_URL")
 
-    # You can define any other initialization parameters to your class.  These are not passed by the LLM but we can pass them
-    # during initialization
+    async def _arun(
+        self, error_details: Optional[str], use_verbose_logging: Optional[bool] = None
+    ) -> Tuple[str, str]:
+        """
+        Asynchronously identify bug solution based on error message
 
-    async def _arun(self, error_details: Optional[str] = None) -> Tuple[str, str]:
-        # do your actual work here
-        return (
-            error_details if error_details else "No error parsed"
-        ), "artifact that is not given to LLM but shown in the UI"
+        Args:
+            error_details: The exact error message to match
+            use_verbose_logging: Flag to enable verbose logging
 
-    def _run(self, error_details: Optional[str] = None) -> Tuple[str, str]:
+        Returns:
+            Tuple of CSV file content (or error message) and artifact description
+        """
+        assert self.bug_csv_file_path, "Set BUG_FILE_S3_URL in env"
+
+        # Parse S3 URL
+        s3_uri = S3Url(self.bug_csv_file_path)
+        bucket_name = s3_uri.bucket
+        file_name = s3_uri.key
+
+        # Get file manager
+        file_manager: FileManager = self.file_manager_factory.get_file_manager(
+            folder=self.bug_csv_file_path
+        )
+
+        # Download the file from the S3 bucket
+        response: StreamingResponse | Response = await file_manager.read_file_async(
+            folder=bucket_name, file_path=file_name
+        )
+        artifact: Optional[str] = None
+
+        # Check if the response is successful
+        if not isinstance(response, StreamingResponse):
+            content, artifact = (
+                "Failed to retrieve the file",
+                f"Error retrieving file: {response}",
+            )
+        else:
+            # Extract content from the file
+            content = await self._extract_content(response)
+            artifact = f'BugIdentifierAgent: File successfully fetched for error "{error_details}"'
+            if use_verbose_logging:
+                artifact += f"\n```{content}```"
+
+        return content, artifact
+
+    def _run(
+        self,
+        error_details: Optional[str] = None,
+        use_verbose_logging: Optional[bool] = None,
+    ) -> Tuple[str, str]:
         """
         Synchronous version of the tool (falls back to async implementation).
 
@@ -62,3 +132,12 @@ class BugIdentifierTool(ResilientBaseTool):
             NotImplementedError: Always raises to enforce async usage
         """
         raise NotImplementedError("Use async version of this tool")
+
+    async def _extract_content(self, response: StreamingResponse) -> str:
+        """Extracts and returns content from a streaming response."""
+        extracted_content = ""
+        async for chunk in response.body_iterator:
+            # Decode the chunk, assuming it is UTF-8 encoded
+            extracted_content += chunk.decode("utf-8")  # type: ignore
+
+        return extracted_content

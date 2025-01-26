@@ -92,7 +92,9 @@ class ToolProvider:
 
         self.tools: Dict[str, BaseTool] = {
             "current_date": CurrentTimeTool(),
-            "bug_identifier": BugIdentifierTool(),
+            "bug_identifier": BugIdentifierTool(
+                file_manager_factory=file_manager_factory
+            ),
             "web_search": web_search_tool,
             "pubmed": PubmedQueryRun(),
             "google_search": GoogleSearchTool(),
