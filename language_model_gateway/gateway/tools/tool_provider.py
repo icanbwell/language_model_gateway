@@ -60,7 +60,7 @@ from language_model_gateway.gateway.utilities.github.github_pull_request_helper 
 from language_model_gateway.gateway.utilities.jira.jira_issues_helper import (
     JiraIssueHelper,
 )
-from language_model_gateway.gateway.tools.ccda_converter_tool import (
+from language_model_gateway.gateway.tools.ccda_extracter_tool import (
     CCDAExtractorTool
 )
 
@@ -140,7 +140,7 @@ class ToolProvider:
             "jira_issues_analyzer": JiraIssuesAnalyzerTool(
                 jira_issues_helper=jira_issues_helper
             ),
-            "ccda_to_fhir_converter": CCDAExtractorTool(
+            "ccda_extracter": CCDAExtractorTool(
                 file_manager_factory=file_manager_factory,
             )
             # "sql_query": QuerySQLDataBaseTool(

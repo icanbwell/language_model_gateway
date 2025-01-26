@@ -32,7 +32,7 @@ class CCDAExtractorTool(ResilientBaseTool):
     return the ccda data for further conversions.
     """
 
-    name: str = "ccda_to_fhir_converter"
+    name: str = "ccda_extracter"
 
     description: str = """
     The CCDAExtractorTool is designed to convert ccda data to fhir r4b standard format
@@ -49,7 +49,6 @@ class CCDAExtractorTool(ResilientBaseTool):
     )
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
     file_manager_factory: FileManagerFactory
-
 
     async def _arun(self, url: str) -> Tuple[str, str]:
 
