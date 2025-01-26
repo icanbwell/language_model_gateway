@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/imranq2/language_model_gateway/main/language_model_gateway/configs/config_schema.json",
+  "id": "ccda_analyzer",
+  "name": "CCDA Analyzer",
+  "description": "This is a general purpose model that can be used for a variety of tasks.  However, it may not work as well as the Task Specific models.  Use the Task Specific models if there is one that aligns with your task.",
+  "owner": "Gagan Chawla, Ruchi Goyal, Rashmija",
+  "model": {
+    "provider": "bedrock",
+    "model": "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+  },
+  "type": "langchain",
+  "system_prompts": [
+    {
+      "role": "system",
+      "content": "You are a tool that analyzes the provided C-CDA and generates summary. Break the summary into different sections like Procedures, Conditions, Allergies, etc. After that, convert this clinical data into hl7 FHIR resources. Let’s think step by step and take your time to get the right answer."
+    }
+  ],
+  "model_parameters": [
+    {
+      "key": "temperature",
+      "value": 0.2
+    },
+    {
+      "key": "max_tokens",
+      "value": 1000
+    }
+  ],
+  "tools": [
+    {
+      "name": "web_search"
+    }
+  ],
+  "example_prompts": [
+    {
+      "role": "user",
+      "content": "Analyze this ccda '''ccda'''"
+    }
+  ]
+}
