@@ -22,7 +22,7 @@
     },
     {
       "key": "max_tokens",
-      "value": 1000
+      "value": 4000
     }
   ],
   "tools": [
@@ -31,6 +31,9 @@
     },
     {
       "name": "web_search"
+    },
+    {
+      "name": "push_fhir_bundle_to_s3"
     }
   ],
   "example_prompts": [

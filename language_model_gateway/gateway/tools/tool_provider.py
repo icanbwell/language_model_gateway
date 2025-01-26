@@ -63,7 +63,9 @@ from language_model_gateway.gateway.utilities.jira.jira_issues_helper import (
 from language_model_gateway.gateway.tools.ccda_extracter_tool import (
     CCDAExtractorTool
 )
-
+from language_model_gateway.gateway.tools.send_fhir_data_to_s3_tool import (
+    SendFHIRDataToS3Tool
+)
 
 class ToolProvider:
     def __init__(
@@ -142,6 +144,9 @@ class ToolProvider:
             ),
             "ccda_extracter": CCDAExtractorTool(
                 file_manager_factory=file_manager_factory,
+            ),
+            "push_fhir_bundle_to_s3": SendFHIRDataToS3Tool(
+                file_manager_factory=file_manager_factory
             )
             # "sql_query": QuerySQLDataBaseTool(
             #     db=SQLDatabase(
