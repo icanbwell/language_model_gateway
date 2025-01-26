@@ -27,13 +27,16 @@
   ],
   "tools": [
     {
+      "name": "ccda_to_fhir_converter"
+    },
+    {
       "name": "web_search"
     }
   ],
   "example_prompts": [
     {
       "role": "user",
-      "content": "Analyze this ccda '''ccda'''"
+      "content": "Please provide aws s3 uri of the file where ccda data is present"
     }
   ]
 }
