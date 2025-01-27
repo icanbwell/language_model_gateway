@@ -1,13 +1,16 @@
 import logging
-from typing import Type, Literal, Tuple, Optional
 from pathlib import Path
+from typing import Type, Literal, Tuple, Optional
+
 from pydantic import BaseModel, Field
-from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
+from starlette.responses import Response, StreamingResponse
+
 from language_model_gateway.gateway.file_managers.file_manager import FileManager
 from language_model_gateway.gateway.file_managers.file_manager_factory import (
     FileManagerFactory,
 )
-from starlette.responses import Response, StreamingResponse
+from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
+
 
 logger = logging.getLogger(__name__)
 
@@ -67,20 +70,17 @@ class SystemCodesCrossWalkTool(ResilientBaseTool):
     training_data_folder: Path = Path(__file__).parent.joinpath(
         "./code_system_training_data"
     )
-    training_data_path: Path = Path(__file__).parent.joinpath(
-        "./code_system_training_data/training_dataset.json"
-    )
 
     async def _arun(
         self, input: Optional[str], use_verbose_logging: Optional[bool] = None
     ) -> Tuple[str, str]:
         """
-        Asynchronously identify bug solution based on error message
+        Asynchronously identify the system code for clinical data
         Args:
             input: The exact error message to match
             use_verbose_logging: Flag to enable verbose logging
         Returns:
-            Tuple of CSV file content (or error message) and artifact description
+            Tuple of input message and artifact description
         """
 
         # # Get file manager
@@ -103,7 +103,7 @@ class SystemCodesCrossWalkTool(ResilientBaseTool):
         else:
             # Extract content from the file
             content = await self._extract_content(response)
-            artifact = f"SystemCodesCrosswalkAgent: File successfully fetched for given input: {input}"
+            artifact = f"SystemCodesCrosswalkAgent: Data cross walk done successfully for the given input: {input}"
             if use_verbose_logging:
                 artifact += f"\n```{content}```"
 
