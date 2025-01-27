@@ -23,14 +23,13 @@ class SendFHIRDataToS3Model(BaseModel):
     """
 
     fhir_data: Dict[str, Any] = Field(
-        default=None,
         description="converted fhir data",
     )
 
 
 class SendFHIRDataToS3Tool(ResilientBaseTool):
     """
-    This tool is designed to take s3 uri of a file as input, get the file, reads its content and 
+    This tool is designed to take s3 uri of a file as input, get the file, reads its content and
     return the ccda data for further conversions.
     """
 
@@ -52,9 +51,10 @@ class SendFHIRDataToS3Tool(ResilientBaseTool):
     file_manager_factory: FileManagerFactory
 
     # Convert FHIR bundle to formatted text
-    def convert_fhir_to_text(fhir_bundle):
+    @staticmethod
+    def convert_fhir_to_text(fhir_bundle: Dict[str, Any]) -> str:
         # Simply convert the JSON to a nicely formatted string
-        return json.dumps(fhir_bundle, indent=2).encode('utf-8')
+        return json.dumps(fhir_bundle, indent=2)
 
     async def _arun(self, fhir_bundle: Dict[str, Any]) -> Tuple[str, str]:
         if not environ.get("S3_FHIR_DATA_PATH"):
@@ -68,20 +68,20 @@ class SendFHIRDataToS3Tool(ResilientBaseTool):
         text_content = SendFHIRDataToS3Tool.convert_fhir_to_text(fhir_bundle)
         # SendFHIRDataToS3Tool.save_to_text_file(text_content, 'fhir_bundle.txt')
 
-        # read the file from S3 
+        # read the file from S3
         file_path = await file_manager.save_file_async(
-            file_data=text_content,
+            file_data=text_content.encode("utf-8"),
             folder=environ["S3_FHIR_DATA_PATH"],
-            file_name = f"{uuid4()}.txt",
-            content_type="application/json"
+            filename=f"{uuid4()}.txt",
+            content_type="application/json",
         )
 
         # Check if the response is successful
         if file_path is None:
-                return (
-                    "Failed to save fhir data to s3",
-                    "Failed to save fhir data to s3",
-                )
+            return (
+                "Failed to save fhir data to s3",
+                "Failed to save fhir data to s3",
+            )
 
         return file_path, "File successfully saved to s3"
 

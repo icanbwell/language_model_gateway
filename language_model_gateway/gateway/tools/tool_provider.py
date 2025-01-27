@@ -21,6 +21,9 @@ from langchain_community.tools.pubmed.tool import PubmedQueryRun
 from language_model_gateway.gateway.tools.er_diagram_generator_tool import (
     ERDiagramGeneratorTool,
 )
+from language_model_gateway.gateway.tools.fhir_converter_service_tool import (
+    FhirConverterServiceTool,
+)
 from language_model_gateway.gateway.tools.flow_chart_generator_tool import (
     FlowChartGeneratorTool,
 )
@@ -60,12 +63,8 @@ from language_model_gateway.gateway.utilities.github.github_pull_request_helper 
 from language_model_gateway.gateway.utilities.jira.jira_issues_helper import (
     JiraIssueHelper,
 )
-from language_model_gateway.gateway.tools.ccda_extracter_tool import (
-    CCDAExtractorTool
-)
-from language_model_gateway.gateway.tools.send_fhir_data_to_s3_tool import (
-    SendFHIRDataToS3Tool
-)
+from language_model_gateway.gateway.tools.ccda_extracter_tool import CCDAExtractorTool
+
 
 class ToolProvider:
     def __init__(
@@ -145,9 +144,10 @@ class ToolProvider:
             "ccda_extracter": CCDAExtractorTool(
                 file_manager_factory=file_manager_factory,
             ),
-            "push_fhir_bundle_to_s3": SendFHIRDataToS3Tool(
-                file_manager_factory=file_manager_factory
-            )
+            "fhir_converter_service": FhirConverterServiceTool(),
+            # "push_fhir_bundle_to_s3": SendFHIRDataToS3Tool(
+            #     file_manager_factory=file_manager_factory
+            # )
             # "sql_query": QuerySQLDataBaseTool(
             #     db=SQLDatabase(
             #         engine=Engine(

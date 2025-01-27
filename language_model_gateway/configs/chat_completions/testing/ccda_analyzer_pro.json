@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/imranq2/language_model_gateway/main/language_model_gateway/configs/config_schema.json",
+  "id": "ccda_analyzer_pro",
+  "name": "CCDA Analyzer Pro",
+  "description": "This is a task specific model instructed specifically to answer all your C-CDA and FHIR related queries. It will help you analyze the CCDAs and its conversion to FHIR.",
+  "owner": "Gagan Chawla, Rashmija Pandey, Ruchi Goyal, Mark Rivero",
+  "model": {
+    "provider": "bedrock",
+    "model": "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+  },
+  "system_prompts": [
+    {
+      "role": "system",
+      "content": "Extract CCDA. Convert to FHIR. Identify and provide summary for all the procedures, conditions, and other clinical data about a patient that was present in the original CCDA but in the FHIR response"
+    }
+  ],
+  "model_parameters": [
+    {
+      "key": "temperature",
+      "value": 0.2
+    },
+    {
+      "key": "max_tokens",
+      "value": 8000
+    }
+  ],
+  "tools": [
+    {
+      "name": "ccda_extracter"
+    },
+    {
+      "name": "fhir_converter_service"
+    }
+  ],
+  "example_prompts": [
+    {
+      "role": "user",
+      "content": "compare this ccda with its fhir equivalent <s3 url>"
+    }
+  ]
+}

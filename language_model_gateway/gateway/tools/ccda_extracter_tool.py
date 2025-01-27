@@ -21,14 +21,13 @@ class CCDAExtractorModel(BaseModel):
     """
 
     url: str = Field(
-        default=None,
         description="S3 uri for the file which will contain the CCDA data",
     )
 
 
 class CCDAExtractorTool(ResilientBaseTool):
     """
-    This tool is designed to take s3 uri of a file as input, get the file, reads its content and 
+    This tool is designed to take s3 uri of a file as input, get the file, reads its content and
     return the ccda data for further conversions.
     """
 
@@ -60,7 +59,7 @@ class CCDAExtractorTool(ResilientBaseTool):
         bucket_name = s3_uri.bucket
         file_name = s3_uri.key
 
-        # read the file from S3 
+        # read the file from S3
         response: StreamingResponse | Response = await file_manager.read_file_async(
             folder=bucket_name, file_path=file_name
         )

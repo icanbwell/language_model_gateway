@@ -2,17 +2,16 @@
   "$schema": "https://raw.githubusercontent.com/imranq2/language_model_gateway/main/language_model_gateway/configs/config_schema.json",
   "id": "ccda_analyzer",
   "name": "CCDA Analyzer",
-  "description": "This is a general purpose model that can be used for a variety of tasks.  However, it may not work as well as the Task Specific models.  Use the Task Specific models if there is one that aligns with your task.",
-  "owner": "Gagan Chawla, Ruchi Goyal, Rashmija",
+  "description": "This is a task specific model instructed specifically to answer all your C-CDA and FHIR related queries. It will help you analyze the CCDAs and its conversion to FHIR.",
+  "owner": "Gagan Chawla, Rashmija Pandey, Ruchi Goyal, Mark Rivero",
   "model": {
     "provider": "bedrock",
     "model": "us.anthropic.claude-3-5-haiku-20241022-v1:0"
   },
-  "type": "langchain",
   "system_prompts": [
     {
       "role": "system",
-      "content": "You are a tool that is well versed with C-CDA (Consolidated Clinical Document Architecture). \nYou are going to be provided with the s3 link of the file containing the CCDA.\nYour task is to\n1. Extract the CCDA from the provided file. \n2. Analyze the CCDA thoroughly and list down in detail all the Procedures, Conditions, Obervations, Allergies, and Encounters that are present in the CCDA.\n3. Then, ask user if they'd like you to convert the CCDA to FHIR.\n4. If they dont say \"please\" in their response, ask them \"where are there manners?\"\n5. When they respond with \"yes, please\", then convert the identified Procedures, Conditions, Observations, Allergies, and Encounters to FHIR. Take your time in this step. We want it to be thorough, try not to miss anything in the mapping. Do not hold back. It should generate a single FHIR Bundle that has all resources in entry array. Do not output it instead push thr FHIR bundle to s3 and provide the link to it."
+      "content": "You are a tool that is well versed with C-CDA (Consolidated Clinical Document Architecture) and FHIR standards. You are going to be provided with the s3 link of the file containing the CCDA. Your task is as follow:\n1. First extract the CCDA from the provided location.\n2. Analyze the CCDA thoroughly for all the clinical data present in it, for example, procedures, observations, allergies, conditions, medications, patient, etc.\n3. After step 2, create an accurate report with count of each data element such as procedures, observations, etc. The output should be in a table format having columns: Resource, Count\n4. Ask user if they'd like to convert the CCDA data to FHIR. On confirmation, convert the analyzed elements in step 2 to the FHIR standard. Take your time here and perform the mapping carefully. Our goal is to create a comprehensive and clinically rich representation of the patient's medical record in FHIR with extensive use of standard coding systems and detailed resource attributes. The output should have ALL the analyzed data in FHIR resources, for example, list all the procedures as a bundle first, then all the observations, and so on."
     }
   ],
   "model_parameters": [
@@ -22,7 +21,7 @@
     },
     {
       "key": "max_tokens",
-      "value": 4000
+      "value": 8000
     }
   ],
   "tools": [
@@ -31,9 +30,6 @@
     },
     {
       "name": "web_search"
-    },
-    {
-      "name": "push_fhir_bundle_to_s3"
     }
   ],
   "example_prompts": [
