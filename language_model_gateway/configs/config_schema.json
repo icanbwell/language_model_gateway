@@ -214,7 +214,9 @@
                   "pdf_text_extractor ",
                   "github_pull_request_analyzer",
                   "github_pull_request_diff",
-                  "jira_issues_analyzer"
+                  "jira_issues_analyzer",
+                  "health_summary_generator",
+                  "fhir_graphql_schema_provider"
                 ]
               },
               {
@@ -278,7 +280,9 @@
                   "pdf_text_extractor ",
                   "github_pull_request_analyzer",
                   "github_pull_request_diff",
-                  "jira_issues_analyzer"
+                  "jira_issues_analyzer",
+                  "health_summary_generator",
+                  "fhir_graphql_schema_provider"
                 ]
               },
               {

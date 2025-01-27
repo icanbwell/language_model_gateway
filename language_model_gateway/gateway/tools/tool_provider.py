@@ -24,6 +24,9 @@ from language_model_gateway.gateway.tools.er_diagram_generator_tool import (
 from language_model_gateway.gateway.tools.flow_chart_generator_tool import (
     FlowChartGeneratorTool,
 )
+from language_model_gateway.gateway.tools.health_summary_generator_tool import (
+    HealthSummaryGeneratorTool,
+)
 from language_model_gateway.gateway.tools.github_pull_request_analyzer_tool import (
     GitHubPullRequestAnalyzerTool,
 )
@@ -33,6 +36,9 @@ from language_model_gateway.gateway.tools.github_pull_request_diff_tool import (
 from language_model_gateway.gateway.tools.google_search_tool import GoogleSearchTool
 from language_model_gateway.gateway.tools.graph_viz_diagram_generator_tool import (
     GraphVizDiagramGeneratorTool,
+)
+from language_model_gateway.gateway.tools.fhir_graphql_schema_provider import (
+    GraphqlSchemaProviderTool,
 )
 from language_model_gateway.gateway.tools.image_generator_tool import ImageGeneratorTool
 from language_model_gateway.gateway.tools.jira_issues_analyzer_tool import (
@@ -98,6 +104,9 @@ class ToolProvider:
             "python_repl": PythonReplTool(),
             "get_web_page": URLToMarkdownTool(),
             "arxiv_search": ArxivQueryRun(),
+            "health_summary_generator": HealthSummaryGeneratorTool(
+                file_manager_factory=file_manager_factory,
+            ),
             "image_generator": ImageGeneratorTool(
                 image_generator_factory=image_generator_factory,
                 file_manager_factory=file_manager_factory,
@@ -140,6 +149,7 @@ class ToolProvider:
                 jira_issues_helper=jira_issues_helper
             ),
             "person_creator": PersonCreatorTool(),
+            "fhir_graphql_schema_provider": GraphqlSchemaProviderTool(),
             # "sql_query": QuerySQLDataBaseTool(
             #     db=SQLDatabase(
             #         engine=Engine(

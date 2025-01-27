@@ -48,7 +48,7 @@ class ProviderSearchTool(ResilientBaseTool):
             ) {
               searchProviders(
                 searchProvidersInput: {
-                  client: [{ dataSets: NPPES }]
+                  client: [{ dataSets: [CONNECTHUB, NPPES] }]
                   search: $search
                   searchPosition: $searchPosition
                   specialty: $specialty
@@ -103,6 +103,17 @@ class ProviderSearchTool(ResilientBaseTool):
                   }
                   endpoint {
                     name
+                    address
+                    status
+                    identifier {
+                      system
+                      value
+                    }
+                    connectionType {
+                      code
+                      display
+                      system
+                    }
                   }
                 }
               }

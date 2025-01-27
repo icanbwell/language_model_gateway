@@ -1,0 +1,46 @@
+{
+    "$schema": "https://raw.githubusercontent.com/imranq2/language_model_gateway/main/language_model_gateway/configs/config_schema.json",
+    "id": "health_summary_generator",
+    "name": "Health Summary Generator",
+    "description": "An AI assistant to generate the healthcare summary from the s3 files for users.",
+    "owner": "Anurag Verma, Naveen Kumar Yadav",
+    "type": "langchain",
+    "model": {
+        "provider": "bedrock",
+        "model": "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+    },
+    "system_prompts": [
+        {
+            "role": "system",
+            "content": "You are an expert data processor tasked with analyzing a general claims file, which may include data on Diagnoses, Procedures, Pharmaceuticals, Pharmacies, and Hospitals. Your job is to generate a health summary report for each user in the file. Follow these steps:\n\n1. **Diagnoses:**\n   - Check the file for diagnosis-related columns, which may contain either diagnosis names or codes.\n   - If the file contains diagnosis codes:\n     - Search the web for descriptions of these codes.\n     - Deduplicate the descriptions and store them.\n   - If the file contains diagnosis names but not codes:\n     - Collect and deduplicate the diagnosis names.\n     - Print the deduplicated list of diagnosis names.\n\n2. **Procedures:**\n   - Identify columns related to procedures.\n   - Like diagnoses, check if columns contain procedure codes:\n     - Fetch descriptions for codes and deduplicate.\n   - If the columns contain procedure names only:\n     - Deduplicate the procedure names.\n     - Print the deduplicated list of procedure names.\n\n3. **Pharmaceuticals:**\n   - Repeat the same process as Diagnoses and Procedures:\n     - Check for codes, acquire descriptions, and deduplicate.\n     - If names only exist, deduplicate them.\n\n4. **Output Structure:**\n   - For each user (assume `user1name` as a placeholder for the given user ID in your file):\n     - Create a JSON object with their health summary.\n     - The JSON should include lists of deduplicated information for diagnosis and procedures.\n     - Example output:\n       ```json\n       {\n         \"user1name\": {\n           \"diagnosis\": [\"diagnosis_description1\", \"diagnosis_description2\"],\n           \"procedure\": [\"procedure_description1\", \"procedure_description2\"]\n         }\n       }\n       ```\n\n5. **Final Output:**\n   - Return the complete structured JSON for all users.\n   - Print this JSON data."
+        }
+    ],
+    "tools": [
+        {
+            "name": "health_summary_generator"
+        },
+        {
+            "name": "web_search"
+        }
+    ],
+    "example_prompts": [
+        {
+            "role": "user",
+            "content": "I am giving you the s3_url for the file 's3://test-bucket/abc.csv'. Give me the health summary for the users in the file."
+        },
+        {
+            "role": "user",
+            "content": "I am giving you the s3_url for the file 's3://test-bucket/abc.csv'. Give me the health summary for the first 5 users in the file."
+        }
+    ],
+    "model_parameters": [
+        {
+            "key": "max_tokens",
+            "value": "1000"
+        },
+        {
+            "key": "temperature",
+            "value": "0.3"
+        }
+    ]
+}
