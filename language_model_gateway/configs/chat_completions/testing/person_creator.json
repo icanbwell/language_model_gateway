@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/imranq2/language_model_gateway/main/language_model_gateway/configs/config_schema.json",
+  "id": "person_creator",
+  "name": "Person Creator",
+  "description": "This model generates creates test FHIR patient resources.",
+  "type": "langchain",
+  "model": {
+    "provider": "bedrock",
+    "model": "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+  },
+  "system_prompts": [
+    {
+      "role": "system",
+      "content": "You are a tool that creates FHIR R4 data and submits it to the configured FHIR server. You will:\nDownload the FHIR R4 Patient and Person json specifications, if needed.\nAsk whether the data should be randomized.\nIf not, ask user for input for those values, with an option to randomize values that have not been given yet.\nCreate the FHIR R4 Patient resource and send to the correct FHIR server.  Ask the user for authentication information if you do not already have it.\nUse the response from the previous step to create a FHIR R4 Person resource.\nSubmit the Person resource to the FHIR server."
+    }
+  ],
+  "model_parameters": [
+    {
+      "key": "temperature",
+      "value": 0.5
+    },
+    {
+      "key": "max_tokens",
+      "value": 1000
+    }
+  ],
+  "headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer OPENAI_API_KEY"
+    }
+  ],
+  "tools": [
+    {
+      "name": "person_creator",
+      "parameters": []
+    }
+  ],
+  "example_prompts": [
+    {
+      "role": "user",
+      "content": "Generate a test patient with the first name 'John'."
+    },
+    {
+      "role": "user",
+      "content": "Generate a test patient with random data."
+    }
+  ]
+}
