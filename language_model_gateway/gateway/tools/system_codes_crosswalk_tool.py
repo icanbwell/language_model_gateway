@@ -1,6 +1,5 @@
 import logging
-from typing import Dict, List, Type, Literal, Tuple, Optional
-import os, json
+from typing import Type, Literal, Tuple, Optional
 from pathlib import Path
 from pydantic import BaseModel, Field
 from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
@@ -9,7 +8,6 @@ from language_model_gateway.gateway.file_managers.file_manager_factory import (
     FileManagerFactory,
 )
 from starlette.responses import Response, StreamingResponse
-from language_model_gateway.gateway.utilities.s3_url import S3Url
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +16,7 @@ class SystemCodesCrossWalkModel(BaseModel):
     """
     Input Model for System Code Crosswalk tool.
     """
+
     input: Optional[str] = Field(
         default=None,
         description=(
@@ -65,9 +64,12 @@ class SystemCodesCrossWalkTool(ResilientBaseTool):
     )
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
     file_manager_factory: FileManagerFactory
-    training_data_folder: Path = Path(__file__).parent.joinpath("./code_system_training_data")
-    training_data_path: Path = Path(__file__).parent.joinpath("./code_system_training_data/training_dataset.json")
-
+    training_data_folder: Path = Path(__file__).parent.joinpath(
+        "./code_system_training_data"
+    )
+    training_data_path: Path = Path(__file__).parent.joinpath(
+        "./code_system_training_data/training_dataset.json"
+    )
 
     async def _arun(
         self, input: Optional[str], use_verbose_logging: Optional[bool] = None
@@ -81,19 +83,14 @@ class SystemCodesCrossWalkTool(ResilientBaseTool):
             Tuple of CSV file content (or error message) and artifact description
         """
 
-        # Parse input
-        training_data: List[Dict[str, str]]
-        with open(self.training_data_path, "r") as file:
-            training_data = json.loads(file.read())
-
         # # Get file manager
         file_manager: FileManager = self.file_manager_factory.get_file_manager(
-            folder=self.training_data_path
+            folder=str(self.training_data_folder)
         )
 
         # Download the file from the S3 bucket
         response: StreamingResponse | Response = await file_manager.read_file_async(
-            folder=self.training_data_folder, file_path="training_dataset.json"
+            folder=str(self.training_data_folder), file_path="training_dataset.json"
         )
         artifact: Optional[str] = None
 
@@ -106,12 +103,11 @@ class SystemCodesCrossWalkTool(ResilientBaseTool):
         else:
             # Extract content from the file
             content = await self._extract_content(response)
-            artifact = f'BugIdentifierAgent: File successfully fetched for given input: {input}'
+            artifact = f"SystemCodesCrosswalkAgent: File successfully fetched for given input: {input}"
             if use_verbose_logging:
                 artifact += f"\n```{content}```"
 
         return content, artifact
-        
 
     def _run(
         self,
