@@ -1,6 +1,6 @@
 import logging
-from typing import Type, Literal, Tuple, Optional
-import os
+from typing import Dict, List, Type, Literal, Tuple, Optional
+import os, json
 from pathlib import Path
 from pydantic import BaseModel, Field
 from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
@@ -65,52 +65,52 @@ class SystemCodesCrossWalkTool(ResilientBaseTool):
     )
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
     file_manager_factory: FileManagerFactory
+    training_data_folder: Path = Path(__file__).parent.joinpath("./code_system_training_data")
     training_data_path: Path = Path(__file__).parent.joinpath("./code_system_training_data/training_dataset.json")
 
 
     async def _arun(
-        self, error_details: Optional[str], use_verbose_logging: Optional[bool] = None
+        self, input: Optional[str], use_verbose_logging: Optional[bool] = None
     ) -> Tuple[str, str]:
         """
         Asynchronously identify bug solution based on error message
         Args:
-            error_details: The exact error message to match
+            input: The exact error message to match
             use_verbose_logging: Flag to enable verbose logging
         Returns:
             Tuple of CSV file content (or error message) and artifact description
         """
-        # assert self.bug_csv_file_path, "Set BUG_FILE_S3_URL in env"
 
-        # # Parse S3 URL
-        # s3_uri = S3Url(self.bug_csv_file_path)
-        # bucket_name = s3_uri.bucket
-        # file_name = s3_uri.key
+        # Parse input
+        training_data: List[Dict[str, str]]
+        with open(self.training_data_path, "r") as file:
+            training_data = json.loads(file.read())
 
         # # Get file manager
-        # file_manager: FileManager = self.file_manager_factory.get_file_manager(
-        #     folder=self.bug_csv_file_path
-        # )
+        file_manager: FileManager = self.file_manager_factory.get_file_manager(
+            folder=self.training_data_path
+        )
 
-        # # Download the file from the S3 bucket
-        # response: StreamingResponse | Response = await file_manager.read_file_async(
-        #     folder=bucket_name, file_path=file_name
-        # )
-        # artifact: Optional[str] = None
+        # Download the file from the S3 bucket
+        response: StreamingResponse | Response = await file_manager.read_file_async(
+            folder=self.training_data_folder, file_path="training_dataset.json"
+        )
+        artifact: Optional[str] = None
 
-        # # Check if the response is successful
-        # if not isinstance(response, StreamingResponse):
-        #     content, artifact = (
-        #         "Failed to retrieve the file",
-        #         f"Error retrieving file: {response}",
-        #     )
-        # else:
-        #     # Extract content from the file
-        #     content = await self._extract_content(response)
-        #     artifact = f'BugIdentifierAgent: File successfully fetched for error "{error_details}"'
-        #     if use_verbose_logging:
-        #         artifact += f"\n```{content}```"
+        # Check if the response is successful
+        if not isinstance(response, StreamingResponse):
+            content, artifact = (
+                "Failed to retrieve the file",
+                f"Error retrieving file: {response}",
+            )
+        else:
+            # Extract content from the file
+            content = await self._extract_content(response)
+            artifact = f'BugIdentifierAgent: File successfully fetched for given input: {input}'
+            if use_verbose_logging:
+                artifact += f"\n```{content}```"
 
-        # return content, artifact
+        return content, artifact
         
 
     def _run(
