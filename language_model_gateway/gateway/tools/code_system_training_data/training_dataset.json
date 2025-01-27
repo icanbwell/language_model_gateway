@@ -1,0 +1,102 @@
+[
+    {
+    "display": "Body temperature",
+    "system": "LOINC",
+    "code": "8310-5"
+    },
+    {
+    "display": "Body temperature finding",
+    "system": "SNOMED CT",
+    "code": "386725007"
+    },
+    {
+    "display": "Blood pressure systolic and diastolic",
+    "system": "LOINC",
+    "code": "55284-4"
+    },
+    {
+    "display": "Blood pressure finding",
+    "system": "SNOMED CT",
+    "code": "75367002"
+    },
+    {
+    "display": "Heart rate",
+    "system": "LOINC",
+    "code": "8867-4"
+    },
+    {
+    "display": "Heart rate finding",
+    "system": "SNOMED CT",
+    "code": "364075005"
+    },
+    {
+    "display": "Body weight",
+    "system": "LOINC",
+    "code": "29463-7"
+    },
+    {
+    "display": "Body weight finding",
+    "system": "SNOMED CT",
+    "code": "27113001"
+    },
+    {
+    "display": "Body height",
+    "system": "LOINC",
+    "code": "8302-2"
+    },
+    {
+    "display": "Body height measure",
+    "system": "SNOMED CT",
+    "code": "50373000"
+    },
+    {
+    "display": "Respiratory rate",
+    "system": "LOINC",
+    "code": "9279-1"
+    },
+    {
+    "display": "Respiratory rate finding",
+    "system": "SNOMED CT",
+    "code": "86290005"
+    },
+    {
+    "display": "Oxygen saturation in arterial blood by Pulse oximetry",
+    "system": "LOINC",
+    "code": "59408-5"
+    },
+    {
+    "display": "Peripheral oxygen saturation",
+    "system": "SNOMED CT",
+    "code": "431314004"
+    },
+    {
+    "display": "Body mass index (BMI)",
+    "system": "LOINC",
+    "code": "39156-5"
+    },
+    {
+    "display": "Body mass index",
+    "system": "SNOMED CT",
+    "code": "60621009"
+    },
+    {
+    "display": "Pain severity - 0-10 verbal numeric rating",
+    "system": "LOINC",
+    "code": "72514-3"
+    },
+    {
+    "display": "Pain score",
+    "system": "SNOMED CT",
+    "code": "225908003"
+    },
+    {
+    "display": "Glucose [Mass/volume] in Blood",
+    "system": "LOINC",
+    "code": "2339-0"
+    },
+    {
+    "display": "Plasma glucose level",
+    "system": "SNOMED CT",
+    "code": "271062006"
+    }
+]
