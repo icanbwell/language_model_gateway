@@ -56,6 +56,9 @@ from language_model_gateway.gateway.tools.scraping_bee_web_scraper_tool import (
 from language_model_gateway.gateway.tools.sequence_diagram_generator_tool import (
     SequenceDiagramGeneratorTool,
 )
+from language_model_gateway.gateway.tools.system_codes_crosswalk_tool import (
+    SystemCodesCrossWalkTool,
+)
 from language_model_gateway.gateway.tools.url_to_markdown_tool import URLToMarkdownTool
 from language_model_gateway.gateway.utilities.environment_variables import (
     EnvironmentVariables,
@@ -145,6 +148,9 @@ class ToolProvider:
             ),
             "jira_issues_analyzer": JiraIssuesAnalyzerTool(
                 jira_issues_helper=jira_issues_helper
+            ),
+            "system_codes_crosswalk": SystemCodesCrossWalkTool(
+                file_manager_factory=file_manager_factory
             ),
             "fhir_graphql_schema_provider": GraphqlSchemaProviderTool(),
             # "sql_query": QuerySQLDataBaseTool(

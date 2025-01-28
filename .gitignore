@@ -122,6 +122,7 @@ venv.bak/
 
 # mypy
 language_model_gateway/.mypy_cache/
+.mypy_cache/
 .dmypy.json
 dmypy.json
 
