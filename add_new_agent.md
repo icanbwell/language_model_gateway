@@ -110,7 +110,9 @@ class JiraIssuesAnalyzerTool(ResilientBaseTool):
         # do your actual work here
         return "response to LLM", "artifact that is not given to LLM but shown in the UI"
 ```
-IMPORTANT: This function should take the same parameters as the fields in your input parameters class.
+IMPORTANT: 
+- This function should take the same parameters as the fields in your input parameters class.
+- The *return values* should be a tuple of two strings.  The first string is the response to the LLM. Please note that the LLM cannot accept any string. It will parse the response and if it does not find it "answers" the original query it will claim it failed. The second string is an artifact that is not shown to the LLM but is shown in the UI. It is strongly suggested to utilize Markdown formatting for the artifact string where this makes sense.
 
 You also have to implement the synchronous version of this method but you can just return `NotImplementedError`.
 ```python
