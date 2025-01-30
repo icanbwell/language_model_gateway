@@ -6,8 +6,6 @@ from typing import (
     Any,
     List,
     Sequence,
-    Union,
-    Literal,
     cast,
     Optional,
     Tuple,
@@ -23,18 +21,15 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import (
     AIMessage,
     AnyMessage,
-    BaseMessage,
     ToolMessage,
 )
 from langchain_core.messages import AIMessageChunk
 from langchain_core.messages.ai import UsageMetadata
-from langchain_core.prompt_values import PromptValue
-from langchain_core.runnables import Runnable
 from langchain_core.runnables.schema import CustomStreamEvent, StandardStreamEvent
 from langchain_core.tools import BaseTool
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph.graph import CompiledGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.prebuilt import ToolNode
+from langgraph.prebuilt import ToolNode, create_react_agent
 from openai import NotGiven, NOT_GIVEN
 from openai.types import CompletionUsage
 from openai.types.chat import (
@@ -698,59 +693,15 @@ class LangGraphToOpenAIConverter:
         :return: compiled state graph
         """
         tool_node: ToolNode | None = None
-        model_with_tools: Runnable[
-            PromptValue
-            | str
-            | Sequence[
-                BaseMessage | list[str] | tuple[str, str] | str | dict[str, Any]
-            ],
-            BaseMessage,
-        ]
         if len(tools) > 0:
             tool_node = StreamingToolNode(tools)
-            model_with_tools = llm.bind_tools(tools)
-        else:
-            model_with_tools = llm
 
-        def should_continue(
-            state: MyMessagesState,
-        ) -> Union[Literal["tools"], str]:
-            messages: List[AnyMessage] = state["messages"]
-            last_message: AnyMessage = messages[-1]
-            # Check if it's an AIMessage and has tool calls
-            if isinstance(last_message, AIMessage) and getattr(
-                last_message, "tool_calls", None
-            ):
-                return "tools"
-            return END
-
-        async def call_model(state: MyMessagesState) -> MyMessagesState:
-            messages: List[AnyMessage] = state["messages"]
-            response: AnyMessage
-            base_message: BaseMessage = await model_with_tools.ainvoke(messages)
-            # assert isinstance(base_message, AnyMessage)
-            response = cast(AnyMessage, base_message)
-            usage_metadata = (
-                response.usage_metadata if hasattr(response, "usage_metadata") else None
-            )
-            return MyMessagesState(messages=[response], usage_metadata=usage_metadata)
-
-        workflow = StateGraph(MyMessagesState)
-
-        # Define the two nodes we will cycle between
-        workflow.add_node("agent", call_model)  # Now using async call_model
-        if len(tools) > 0:
-            assert tool_node is not None
-            workflow.add_node("tools", tool_node)
-
-        workflow.add_edge(START, "agent")
-        if len(tools) > 0:
-            workflow.add_conditional_edges("agent", should_continue, ["tools", END])
-            workflow.add_edge("tools", "agent")
-        workflow.add_edge("agent", END)
-
-        compiled_state_graph: CompiledStateGraph = workflow.compile()
-        return compiled_state_graph
+        compiled_state_graph: CompiledGraph = create_react_agent(
+            model=llm,
+            tools=tool_node or [],
+            state_schema=MyMessagesState,
+        )
+        return cast(CompiledStateGraph, compiled_state_graph)
 
     @staticmethod
     def add_completion_usage(

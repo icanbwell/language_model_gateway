@@ -1,8 +1,8 @@
 from typing import Optional
 
 from langchain_core.messages.ai import UsageMetadata
-from langgraph.graph import MessagesState
+from langgraph.prebuilt.chat_agent_executor import AgentState
 
 
-class MyMessagesState(MessagesState):
+class MyMessagesState(AgentState):
     usage_metadata: Optional[UsageMetadata]
