@@ -1,8 +1,10 @@
 import logging
 import os
 from datetime import datetime
-from typing import Type, Optional, List, Tuple, Literal, Dict
+from typing import Type, Optional, List, Tuple, Literal, Dict, Annotated
 
+from langchain_core.runnables import RunnableConfig
+from langgraph.prebuilt import InjectedState
 from pydantic import BaseModel, Field
 
 from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
@@ -161,12 +163,12 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
 
     args_schema: Type[BaseModel] = GitHubPullRequestAnalyzerAgentInput
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
-
     github_pull_request_helper: GithubPullRequestHelper
 
     # noinspection PyPep8Naming
     def _run(
         self,
+        *,
         repository_name: Optional[str] = None,
         minimum_created_date: Optional[datetime] = None,
         maximum_created_date: Optional[datetime] = None,
@@ -179,6 +181,8 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
         use_verbose_logging: Optional[bool] = None,
         limit: Optional[int] = None,
         include_description: Optional[bool] = None,
+        state: Annotated[InjectedState, InjectedState],
+        config: RunnableConfig,
     ) -> Tuple[str, str]:
         """
         Synchronous version of the tool (falls back to async implementation).
@@ -191,6 +195,7 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
     # noinspection PyPep8Naming
     async def _arun(
         self,
+        *,
         repository_name: Optional[str] = None,
         minimum_created_date: Optional[datetime] = None,
         maximum_created_date: Optional[datetime] = None,
@@ -203,6 +208,8 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
         use_verbose_logging: Optional[bool] = None,
         limit: Optional[int] = None,
         include_description: Optional[bool] = None,
+        state: Annotated[InjectedState, InjectedState],
+        config: RunnableConfig,
     ) -> Tuple[str, str]:
         """
         Asynchronous version of the GitHub Pull Request extraction tool.

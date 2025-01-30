@@ -29,7 +29,7 @@ async def get_container_async() -> SimpleContainer:
 
 
 def get_chat_manager(
-    container: Annotated[SimpleContainer, Depends(get_container_async)]
+    container: Annotated[SimpleContainer, Depends(get_container_async)],
 ) -> ChatCompletionManager:
     """helper function to get the chat manager"""
     assert isinstance(container, SimpleContainer), type(container)
@@ -37,7 +37,7 @@ def get_chat_manager(
 
 
 def get_model_manager(
-    container: Annotated[SimpleContainer, Depends(get_container_async)]
+    container: Annotated[SimpleContainer, Depends(get_container_async)],
 ) -> ModelManager:
     """helper function to get the model manager"""
     assert isinstance(container, SimpleContainer), type(container)
@@ -45,7 +45,7 @@ def get_model_manager(
 
 
 def get_image_generation_manager(
-    container: Annotated[SimpleContainer, Depends(get_container_async)]
+    container: Annotated[SimpleContainer, Depends(get_container_async)],
 ) -> ImageGenerationManager:
     """helper function to get the model manager"""
     assert isinstance(container, SimpleContainer), type(container)
@@ -53,7 +53,7 @@ def get_image_generation_manager(
 
 
 def get_config_reader(
-    container: Annotated[SimpleContainer, Depends(get_container_async)]
+    container: Annotated[SimpleContainer, Depends(get_container_async)],
 ) -> ConfigReader:
     """helper function to get the chat manager"""
     assert isinstance(container, SimpleContainer), type(container)
@@ -61,7 +61,7 @@ def get_config_reader(
 
 
 def get_aws_client_factory(
-    container: Annotated[SimpleContainer, Depends(get_container_async)]
+    container: Annotated[SimpleContainer, Depends(get_container_async)],
 ) -> AwsClientFactory:
     """helper function to get the chat manager"""
     assert isinstance(container, SimpleContainer), type(container)
@@ -69,7 +69,7 @@ def get_aws_client_factory(
 
 
 def get_file_manager_factory(
-    container: Annotated[SimpleContainer, Depends(get_container_async)]
+    container: Annotated[SimpleContainer, Depends(get_container_async)],
 ) -> FileManagerFactory:
     """helper function to get the chat manager"""
     assert isinstance(container, SimpleContainer), type(container)

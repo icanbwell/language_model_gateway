@@ -17,9 +17,9 @@ requests = ">=2.32.3"
 # aridne is a Python library for building GraphQL APIs
 ariadne = ">=0.23.0"
 # fastapi is a Python library for building APIs
-fastapi = ">=0.115.6"
+fastapi = ">=0.115.8"
 # boto3 is a Python library for interacting with AWS services
-boto3 = ">=1.35.84"
+boto3 = ">=1.36.9"
 # uvicorn is a Python library for running ASGI applications
 uvicorn = ">=0.34.0"
 # ddtrace is a Python library for tracing requests
@@ -33,25 +33,25 @@ httpx = ">=0.28.1"
 # httpx-sse is a Python library for making Server-Sent Events requests
 httpx-sse = ">=0.4.0"
 # langchain is a Python library for building language models
-langchain = ">=0.3.13"
+langchain = ">=0.3.17"
 # pydantic is a Python library for data validation
 pydantic = ">=2.0,<3.0.0"  # needed by langchain
 # langchain-core is a Python library for building language models
-langchain-core = ">=0.3.21"
+langchain-core = ">=0.3.33"
 # langchain-aws is a Python library for interacting with AWS services
 langchain-aws = ">=0.2.9"
 # openai is a Python library for interacting with OpenAI
-openai = ">=1.58.1"
+openai = ">=1.60.2"
 # langchain-openai is a Python library for interacting with OpenAI
-langchain-openai = ">=0.2.12"
+langchain-openai = ">=0.3.3"
 # langchain-community is a Python library that contains ommmunity extensions
-langchain-community = ">=0.3.14"
+langchain-community = ">=0.3.16"
 # grpcio is a Python library for working with gRPC.   Needed by Google Vertex AI
 grpcio = { version = "==1.66.0", index = "alpine-wheels" }
 # langchain-google-community is a Python library that contains Google community extensions
 langchain-google-community = ">=2.0.3"
 # langgraph is a Python library for building language models
-langgraph = ">=0.2.60"
+langgraph = ">=0.2.68"
 # langchainhub is a Python library for interacting with the LangChainHub API
 langchainhub = ">=0.1.21"
 # furl is a Python library for working with URLs
@@ -60,7 +60,7 @@ furl = ">=2.1.3"
 # tiktoken 0.8.0 is missing wheel for tiktoken-0.7.0-cp312-cp312-musllinux_1_2_aarch64.whl: https://pypi.org/simple/tiktoken/
 tiktoken = "==0.7.0"
 # duckduckgo-search is a Python library for searching DuckDuckGo web results
-duckduckgo-search = ">=7.2.0"
+duckduckgo-search = ">=7.3.0"
 # xmltodict is a Python library for working with XML.  It is used by the PubMed tool
 xmltodict = ">=0.14.2"
 # llm-guard is a Python library designed to protect the LLM API from abuse
@@ -79,11 +79,11 @@ cachetools = ">=5.5.0"
 # aiofiles is a Python library for working with files asynchronously
 #aiofiles = ">=24.1.0"
 # pypdf is a Python library for working with PDFs
-pypdf = ">=5.1.0"
+pypdf = ">=5.2.0"
 # backoff is a Python library for retrying requests
 backoff = ">=2.2.1"
 # Databricks SDK is a Python library for interacting with Databricks
-databricks-sdk = ">=0.1.6"
+databricks-sdk = ">=0.42.0"
 # pandas is a Python library for working with data
 pandas = ">=2.2.3"
 
@@ -97,9 +97,9 @@ mypy = ">=1.13.0"
 # pytest is a Python library for running tests
 pytest = ">=8.3.3"
 # pytest-asyncio is a Python library for running asyncio tests
-pytest-asyncio = ">=0.25.0"
+pytest-asyncio = ">=0.25.3"
 # black is a Python library for formatting code
-black = ">=24.10.0"
+black = ">=25.1.0"
 # deepdiff is a Python library for comparing objects
 deepdiff = { version = ">=8.1.1", extras = ["murmur"] }
 types-requests = "*"
@@ -112,7 +112,7 @@ types-cachetools = ">=5.5.0"
 # moto is a Python library for mocking AWS services
 moto = { version = ">=5.0.23", extras = ["s3"] }
 # ruff is for linting and formatting code
-ruff = ">=0.8.4"
+ruff = ">=0.9.4"
 
 [requires]
 python_version = "3.12"

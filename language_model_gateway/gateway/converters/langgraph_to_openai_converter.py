@@ -430,6 +430,7 @@ class LangGraphToOpenAIConverter:
                 chat_request["messages"] = [r for r in chat_request["messages"]] + [
                     json_object_system_message
                 ]
+                return chat_request, json_response_requested
             case "json_schema":
                 json_response_requested = True
                 json_response_format: ResponseFormatJSONSchema = cast(
@@ -456,11 +457,11 @@ class LangGraphToOpenAIConverter:
                 chat_request["messages"] = [r for r in chat_request["messages"]] + [
                     json_schema_system_message
                 ]
+                return chat_request, json_response_requested
             case _:
                 assert (
                     False
                 ), f"Unexpected response format type: {response_format.get('type', None)}"
-        return chat_request, json_response_requested
 
     # noinspection PyMethodMayBeStatic
     def convert_usage_meta_data_to_openai(
@@ -726,7 +727,6 @@ class LangGraphToOpenAIConverter:
         async def call_model(state: MyMessagesState) -> MyMessagesState:
             messages: List[AnyMessage] = state["messages"]
             response: AnyMessage
-            usage_metadata: Optional[UsageMetadata] = None
             base_message: BaseMessage = await model_with_tools.ainvoke(messages)
             # assert isinstance(base_message, AnyMessage)
             response = cast(AnyMessage, base_message)

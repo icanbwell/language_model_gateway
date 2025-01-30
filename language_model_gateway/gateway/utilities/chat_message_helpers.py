@@ -71,7 +71,7 @@ def langchain_to_chat_message(message: BaseMessage) -> Optional[ChatCompletionMe
 
 
 def remove_tool_calls(
-    content: str | list[str | dict[str, Any]]
+    content: str | list[str | dict[str, Any]],
 ) -> str | list[str | dict[str, Any]]:
     """Remove tool calls from content."""
     if isinstance(content, str):
