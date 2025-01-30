@@ -212,8 +212,22 @@ class GithubPullRequestHelper:
                         prs.extend(prs_response.json())
                         if len(prs_response.json()) == 0:
                             pages_remaining = False
-                        elif max_pull_requests and len(prs) >= max_pull_requests:
-                            pages_remaining = False
+                        else:
+                            if max_pull_requests and len(prs) >= max_pull_requests:
+                                pages_remaining = False
+
+                            if max_created_at:
+                                pr_created_at = datetime.fromisoformat(
+                                    prs[-1]["created_at"].replace("Z", "+00:00")
+                                )
+                                if pr_created_at <= max_created_at:
+                                    pages_remaining = False
+                            if min_created_at:
+                                pr_created_at = datetime.fromisoformat(
+                                    prs[-1]["created_at"].replace("Z", "+00:00")
+                                )
+                                if pr_created_at < min_created_at:
+                                    pages_remaining = False
                         page_number += 1
 
                     for pr_index, pr in enumerate(prs):

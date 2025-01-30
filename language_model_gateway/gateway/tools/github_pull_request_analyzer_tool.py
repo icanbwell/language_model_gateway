@@ -236,8 +236,10 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
             # Initialize GitHub Pull Request Helper
             # Retrieve closed pull requests
             max_repos: int = int(os.environ.get("GITHUB_MAXIMUM_REPOS", 100))
-            max_pull_requests: int = int(
-                os.environ.get("GITHUB_MAXIMUM_PULL_REQUESTS_PER_REPO", 100)
+            max_pull_requests: Optional[int] = (
+                int(os.environ.get("GITHUB_MAXIMUM_PULL_REQUESTS_PER_REPO", 100))
+                if not counts_only
+                else None
             )
             if limit:
                 max_pull_requests = limit
