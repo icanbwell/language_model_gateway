@@ -526,8 +526,9 @@ class LangGraphToOpenAIConverter:
         Returns:
             The list of any messages.
         """
-        input1: Dict[str, List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]]] = {
-            "messages": messages
+        input1: Dict[str, List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]] | str] = {
+            "messages": messages,
+            "auth_token": "foo",
         }
         output: Dict[str, Any] = await compiled_state_graph.ainvoke(input=input1)
         out_messages: List[AnyMessage] = output["messages"]
@@ -552,8 +553,9 @@ class LangGraphToOpenAIConverter:
         Yields:
             The standard or custom stream event.
         """
-        input1: Dict[str, List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]]] = {
-            "messages": messages
+        input1: Dict[str, List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]] | str] = {
+            "messages": messages,
+            "auth_token": "foo",
         }
         event: StandardStreamEvent | CustomStreamEvent
         async for event in compiled_state_graph.astream_events(
@@ -698,7 +700,7 @@ class LangGraphToOpenAIConverter:
 
         compiled_state_graph: CompiledGraph = create_react_agent(
             model=llm,
-            tools=tool_node or [],
+            tools=tool_node if tool_node is not None else [],
             state_schema=MyMessagesState,
         )
         return cast(CompiledStateGraph, compiled_state_graph)

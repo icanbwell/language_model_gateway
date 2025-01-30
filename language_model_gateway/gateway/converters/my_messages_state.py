@@ -6,3 +6,4 @@ from langgraph.prebuilt.chat_agent_executor import AgentState
 
 class MyMessagesState(AgentState):
     usage_metadata: Optional[UsageMetadata]
+    auth_token: Optional[str]

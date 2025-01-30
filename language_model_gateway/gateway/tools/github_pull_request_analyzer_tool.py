@@ -108,6 +108,10 @@ class GitHubPullRequestAnalyzerAgentInput(BaseModel):
         default=False,
         description="Whether to include pull request description",
     )
+    auth_token: Annotated[Optional[str], InjectedState("auth_token")] = Field(
+        default=None,
+        description="Injected state",
+    )
 
 
 class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
@@ -183,6 +187,7 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
         include_description: Optional[bool] = None,
         state: Annotated[InjectedState, InjectedState],
         config: RunnableConfig,
+        auth_token: Optional[str] = None,
     ) -> Tuple[str, str]:
         """
         Synchronous version of the tool (falls back to async implementation).
@@ -208,8 +213,8 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
         use_verbose_logging: Optional[bool] = None,
         limit: Optional[int] = None,
         include_description: Optional[bool] = None,
-        # state: Annotated[MyMessagesState, InjectedState],
         config: RunnableConfig,
+        auth_token: Optional[str] = None,
     ) -> Tuple[str, str]:
         """
         Asynchronous version of the GitHub Pull Request extraction tool.
