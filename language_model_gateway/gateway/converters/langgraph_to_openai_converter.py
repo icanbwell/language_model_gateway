@@ -24,6 +24,7 @@ from langchain_core.messages import (
     ToolMessage,
     BaseMessage,
     HumanMessage,
+    SystemMessage,
 )
 from langchain_core.messages import AIMessageChunk
 from langchain_core.messages.ai import UsageMetadata
@@ -456,9 +457,9 @@ class LangGraphToOpenAIConverter:
                 ]
                 return chat_request, json_response_requested
             case _:
-                assert (
-                    False
-                ), f"Unexpected response format type: {response_format.get('type', None)}"
+                raise ValueError(
+                    f"Unexpected response format type: {response_format.get('type', None)}"
+                )
 
     # noinspection PyMethodMayBeStatic
     def convert_usage_meta_data_to_openai(
@@ -639,58 +640,42 @@ class LangGraphToOpenAIConverter:
             [(m["role"], m["content"]) for m in messages],
         )
 
-        def convert_message_content_to_string(content: INCOMING_MESSAGE_TYPES) -> str:
-            """
-            Convert the message content to a string.
-
-            Args:
-                content: The message content.
-
-            Returns:
-                The message content as a string.
-            """
-            text: List[str] = []
-            if isinstance(content, str):
-                text.append(content)
-            elif isinstance(content, list):
-                for content_item in content:
-                    content_item_type: Optional[str] = content_item.get("type")
-                    if content_item_type == "text":
-                        text.append(content_item.get("text") or "")
-                    else:
-                        assert (
-                            False
-                        ), f"Unsupported content item type: {type(content_item)}: {content_item}"
-            return "".join(text)
-
         messages_: List[BaseMessage] = []
         for role, content in chat_messages:
             match role:
                 case "system":
                     messages_.append(
-                        ToolMessage(
-                            content=convert_message_content_to_string(content),
+                        SystemMessage(
+                            content=self.convert_incoming_message_content_to_string(
+                                content
+                            ),
                             role="system",
                         )
                     )
                 case "user":
                     messages_.append(
                         HumanMessage(
-                            content=convert_message_content_to_string(content),
+                            content=self.convert_incoming_message_content_to_string(
+                                content
+                            ),
                             role="user",
                         )
                     )
                 case "assistant":
                     messages_.append(
                         AIMessage(
-                            content=convert_message_content_to_string(content),
+                            content=self.convert_incoming_message_content_to_string(
+                                content
+                            ),
                             role="assistant",
                         )
                     )
                 case "tool":
                     messages_.append(
                         ToolMessage(
-                            content=convert_message_content_to_string(content),
+                            content=self.convert_incoming_message_content_to_string(
+                                content
+                            ),
                             role="tool",
                         )
                     )
@@ -794,3 +779,30 @@ class LangGraphToOpenAIConverter:
             structured_response={},
         )
         return input1
+
+    @staticmethod
+    def convert_incoming_message_content_to_string(
+        content_: INCOMING_MESSAGE_TYPES,
+    ) -> str:
+        """
+        Convert the message content to a string.
+
+        Args:
+            content_: The message content.
+
+        Returns:
+            The message content as a string.
+        """
+        text: List[str] = []
+        if isinstance(content_, str):
+            text.append(content_)
+        elif isinstance(content_, list):
+            for content_item in content_:
+                content_item_type: Optional[str] = content_item.get("type")
+                if content_item_type == "text":
+                    text.append(content_item.get("text") or "")
+                else:
+                    raise ValueError(
+                        f"Unsupported content item type: {type(content_item)}: {content_item}"
+                    )
+        return "".join(text)
