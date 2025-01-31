@@ -187,7 +187,7 @@ class GitHubConfigReader:
                 ]
 
                 async def fetch_and_parse_config(
-                    item: Dict[str, Any]
+                    item: Dict[str, Any],
                 ) -> Optional[ChatModelConfig]:
                     try:
                         raw_url = item["download_url"]

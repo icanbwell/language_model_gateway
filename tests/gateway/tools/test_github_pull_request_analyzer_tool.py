@@ -83,6 +83,7 @@ async def test_github_pull_request_analyzer_tool(
         api_key="fake-api-key",
         base_url="http://localhost:5000/api/v1",  # change the default port if needed
         http_client=async_client,
+        default_headers={"Authorization": "Bearer fake-api-key"},
     )
 
     # call API
@@ -162,6 +163,7 @@ async def test_github_pull_request_analyzer_tool_streaming(
         api_key="fake-api-key",
         base_url="http://localhost:5000/api/v1",  # change the default port if needed
         http_client=async_client,
+        default_headers={"Authorization": "Bearer fake-api-key"},
     )
 
     # call API
@@ -249,6 +251,7 @@ async def test_github_pull_request_analyzer_full_details_tool(
         api_key="fake-api-key",
         base_url="http://localhost:5000/api/v1",  # change the default port if needed
         http_client=async_client,
+        default_headers={"Authorization": "Bearer fake-api-key"},
     )
 
     # call API

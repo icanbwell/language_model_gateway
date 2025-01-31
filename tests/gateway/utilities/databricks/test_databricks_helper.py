@@ -21,7 +21,7 @@ def databricks_helper() -> DatabricksHelper:
 
 @pytest.fixture
 def mock_workspace_client(
-    mock_env_vars: Dict[str, str]
+    mock_env_vars: Dict[str, str],
 ) -> Generator[MagicMock, None, None]:
     """Fixture to mock WorkspaceClient with comprehensive mocking"""
     with patch(

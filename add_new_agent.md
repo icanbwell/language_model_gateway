@@ -1,3 +1,5 @@
+from typing import Annotatedfrom pydantic import BaseModel
+
 # How to add a new AI Agent
 
 ## What is an AI Agent
@@ -221,3 +223,42 @@ When `RUN_TESTS_WITH_REAL_LLM` is set then you can test against the real LLMs wi
 ## Integration testing your AI Agent using real LLMs
 Change the `RUN_TESTS_WITH_REAL_LLM` environment variable to "1" in docker-compose.yml.  
 Now your unit tests will run using real LLMs so you can add breakpoints and step through your code.
+
+
+## Adding Authentication
+If your AI Agent needs access to the bearer token of the user, you do the following.
+
+Add auth_token as an input parameter to your AI Agent input model.  This will be injected by our code.
+```python
+from langgraph.prebuilt import InjectedState
+from typing import Type, Optional, List, Tuple, Literal, Dict, Annotated
+from pydantic import BaseModel, Field
+
+class GitHubPullRequestAnalyzerAgentInput(BaseModel):
+    auth_token: Annotated[Optional[str], InjectedState("auth_token")] = Field(
+        default=None,
+        description="Injected state",
+    )
+```
+
+Now you can add auth_token as a parameter to your `_arun` method and it will be passed to your code when present.
+```python
+from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
+from typing import Type, Optional, List, Tuple, Literal, Dict, Annotated
+
+class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
+    async def _arun(
+        self,
+        *,
+        auth_token: Optional[str] = None,
+    ) -> Tuple[str, str]:
+        pass
+```
+
+This will be the auth_token that was passed to our language model gateway when the user authenticated.  
+
+In the case of the OpenWebUI this is the Okta access token generated when the user authenticated.
+
+In the case of API, this is whatever Bearer token the was passed in the Authorization header.
+
+```
