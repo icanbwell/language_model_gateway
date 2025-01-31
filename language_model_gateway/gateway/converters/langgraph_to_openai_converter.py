@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import time
 from typing import (
     Any,
@@ -73,6 +74,7 @@ class LangGraphToOpenAIConverter:
         *,
         request: ChatRequest,
         request_id: str,
+        headers: Dict[str, str],
         compiled_state_graph: CompiledStateGraph,
         messages: List[ChatCompletionMessageParam],
     ) -> AsyncGenerator[str, None]:
@@ -82,6 +84,7 @@ class LangGraphToOpenAIConverter:
         Args:
             request: The chat request.
             request_id: The unique request identifier.
+            headers: The request headers.
             compiled_state_graph: The compiled state graph.
             messages: The list of chat completion message parameters.
 
@@ -93,6 +96,7 @@ class LangGraphToOpenAIConverter:
             event: StandardStreamEvent | CustomStreamEvent
             async for event in self.astream_events(
                 request=request,
+                headers=headers,
                 compiled_state_graph=compiled_state_graph,
                 messages=messages,
             ):
@@ -285,6 +289,7 @@ class LangGraphToOpenAIConverter:
     async def call_agent_with_input(
         self,
         *,
+        headers: Dict[str, str],
         chat_request: ChatRequest,
         request_id: str,
         compiled_state_graph: CompiledStateGraph,
@@ -295,6 +300,7 @@ class LangGraphToOpenAIConverter:
 
         Args:
             chat_request: The chat request.
+            headers: request headers
             request_id: The unique request identifier.
             compiled_state_graph: The compiled state graph.
             system_messages: The list of chat completion message parameters.
@@ -308,6 +314,7 @@ class LangGraphToOpenAIConverter:
         if chat_request.get("stream"):
             return StreamingResponse(
                 await self.get_streaming_response_async(
+                    headers=headers,
                     request=chat_request,
                     request_id=request_id,
                     compiled_state_graph=compiled_state_graph,
@@ -324,6 +331,7 @@ class LangGraphToOpenAIConverter:
 
                 responses: List[AnyMessage] = await self.ainvoke(
                     compiled_state_graph=compiled_state_graph,
+                    headers=headers,
                     request=chat_request,
                     system_messages=system_messages,
                 )
@@ -478,6 +486,7 @@ class LangGraphToOpenAIConverter:
     async def get_streaming_response_async(
         self,
         *,
+        headers: Dict[str, str],
         request: ChatRequest,
         request_id: str,
         compiled_state_graph: CompiledStateGraph,
@@ -488,6 +497,7 @@ class LangGraphToOpenAIConverter:
 
         Args:
             request: The chat request.
+            headers: The request headers.
             request_id: The unique request identifier.
             compiled_state_graph: The compiled state graph.
             system_messages: The list of chat completion message parameters.
@@ -507,6 +517,7 @@ class LangGraphToOpenAIConverter:
         generator: AsyncGenerator[str, None] = self._stream_resp_async_generator(
             request=request,
             request_id=request_id,
+            headers=headers,
             compiled_state_graph=compiled_state_graph,
             messages=messages,
         )
@@ -517,6 +528,7 @@ class LangGraphToOpenAIConverter:
         self,
         *,
         chat_request: ChatRequest,
+        headers: Dict[str, str],
         messages: List[BaseMessage],
         compiled_state_graph: CompiledStateGraph,
     ) -> List[AnyMessage]:
@@ -532,7 +544,9 @@ class LangGraphToOpenAIConverter:
         """
 
         output: Dict[str, Any] = await compiled_state_graph.ainvoke(
-            input=self.create_state(chat_request=chat_request, messages=messages)
+            input=self.create_state(
+                chat_request=chat_request, headers=headers, messages=messages
+            )
         )
         out_messages: List[AnyMessage] = output["messages"]
         return out_messages
@@ -542,6 +556,7 @@ class LangGraphToOpenAIConverter:
         self,
         *,
         request: ChatRequest,
+        headers: Dict[str, str],
         messages: List[BaseMessage],
         compiled_state_graph: CompiledStateGraph,
     ) -> AsyncGenerator[StandardStreamEvent | CustomStreamEvent, None]:
@@ -550,6 +565,7 @@ class LangGraphToOpenAIConverter:
 
         Args:
             request: The chat request.
+            headers: The request headers.
             messages: The list of role and incoming message type tuples.
             compiled_state_graph: The compiled state graph.
 
@@ -559,7 +575,9 @@ class LangGraphToOpenAIConverter:
 
         event: StandardStreamEvent | CustomStreamEvent
         async for event in compiled_state_graph.astream_events(
-            input=self.create_state(chat_request=request, messages=messages),
+            input=self.create_state(
+                chat_request=request, headers=headers, messages=messages
+            ),
             version="v2",
         ):
             yield event
@@ -569,6 +587,7 @@ class LangGraphToOpenAIConverter:
         self,
         *,
         request: ChatRequest,
+        headers: Dict[str, str],
         compiled_state_graph: CompiledStateGraph,
         system_messages: Iterable[ChatCompletionSystemMessageParam],
     ) -> List[AnyMessage]:
@@ -577,6 +596,7 @@ class LangGraphToOpenAIConverter:
 
         Args:
             request: The chat request.
+            headers: The request headers.
             compiled_state_graph: The compiled state graph.
             system_messages: The iterable of chat completion message parameters.
 
@@ -595,6 +615,7 @@ class LangGraphToOpenAIConverter:
 
         return await self._run_graph_with_messages_async(
             chat_request=request,
+            headers=headers,
             compiled_state_graph=compiled_state_graph,
             messages=self.create_messages_for_graph(messages=messages),
         )
@@ -603,6 +624,7 @@ class LangGraphToOpenAIConverter:
         self,
         *,
         request: ChatRequest,
+        headers: Dict[str, str],
         compiled_state_graph: CompiledStateGraph,
         messages: Iterable[ChatCompletionMessageParam],
     ) -> AsyncGenerator[StandardStreamEvent | CustomStreamEvent, None]:
@@ -611,6 +633,7 @@ class LangGraphToOpenAIConverter:
 
         Args:
             request: The chat request.
+            headers: The request headers.
             compiled_state_graph: The compiled state graph.
             messages: The iterable of chat completion message parameters.
 
@@ -620,6 +643,7 @@ class LangGraphToOpenAIConverter:
         event: StandardStreamEvent | CustomStreamEvent
         async for event in self._stream_graph_with_messages_async(
             request=request,
+            headers=headers,
             compiled_state_graph=compiled_state_graph,
             messages=self.create_messages_for_graph(messages=messages),
         ):
@@ -691,6 +715,7 @@ class LangGraphToOpenAIConverter:
         self,
         *,
         request: ChatRequest,
+        headers: Dict[str, Any],
         compiled_state_graph: CompiledStateGraph,
     ) -> List[AnyMessage]:
         """
@@ -698,6 +723,7 @@ class LangGraphToOpenAIConverter:
 
         Args:
             request: The chat request.
+            headers: The request headers.
             compiled_state_graph: The compiled state graph.
 
         Returns:
@@ -709,6 +735,7 @@ class LangGraphToOpenAIConverter:
 
         output_messages: List[AnyMessage] = await self._run_graph_with_messages_async(
             chat_request=request,
+            headers=headers,
             compiled_state_graph=compiled_state_graph,
             messages=messages,
         )
@@ -775,17 +802,54 @@ class LangGraphToOpenAIConverter:
 
     @staticmethod
     def create_state(
-        *, chat_request: ChatRequest, messages: List[BaseMessage]
+        *,
+        chat_request: ChatRequest,
+        headers: Dict[str, Any],
+        messages: List[BaseMessage],
     ) -> MyMessagesState:
+        """
+        Create the state.
+        """
+
         input1: MyMessagesState = MyMessagesState(
             messages=messages,
-            auth_token="foo",
+            auth_token=LangGraphToOpenAIConverter.get_auth_token_from_headers(
+                headers=headers
+            ),
             is_last_step=False,
             usage_metadata=None,
             remaining_steps=0,
             structured_response={},
         )
         return input1
+
+    @staticmethod
+    def get_auth_token_from_headers(headers: Dict[str, str]) -> Optional[str]:
+        """
+        Get the auth token from the headers.
+
+        Args:
+            headers: The headers.
+
+        Returns:
+            The auth token.
+        """
+        # Normalize headers to handle case-insensitive matching
+        normalized_headers = {k.lower(): v for k, v in headers.items()}
+
+        # Check for authorization header variations
+        auth_headers = ["authorization"]
+
+        for header_key in auth_headers:
+            header_value = normalized_headers.get(header_key.lower())
+
+            if header_value:
+                # Use regex to extract bearer token
+                match = re.search(r"Bearer\s+(\S+)", str(header_value), re.IGNORECASE)
+                if match:
+                    return match.group(1)
+
+        return None
 
     @staticmethod
     def convert_incoming_message_content_to_string(
