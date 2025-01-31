@@ -516,6 +516,7 @@ class LangGraphToOpenAIConverter:
     async def _run_graph_with_messages_async(
         self,
         *,
+        chat_request: ChatRequest,
         messages: List[BaseMessage],
         compiled_state_graph: CompiledStateGraph,
     ) -> List[AnyMessage]:
@@ -531,7 +532,7 @@ class LangGraphToOpenAIConverter:
         """
 
         output: Dict[str, Any] = await compiled_state_graph.ainvoke(
-            input=self.create_state(messages=messages)
+            input=self.create_state(chat_request=chat_request, messages=messages)
         )
         out_messages: List[AnyMessage] = output["messages"]
         return out_messages
@@ -558,7 +559,8 @@ class LangGraphToOpenAIConverter:
 
         event: StandardStreamEvent | CustomStreamEvent
         async for event in compiled_state_graph.astream_events(
-            input=self.create_state(messages=messages), version="v2"
+            input=self.create_state(chat_request=request, messages=messages),
+            version="v2",
         ):
             yield event
 
@@ -592,6 +594,7 @@ class LangGraphToOpenAIConverter:
         ] + new_messages
 
         return await self._run_graph_with_messages_async(
+            chat_request=request,
             compiled_state_graph=compiled_state_graph,
             messages=self.create_messages_for_graph(messages=messages),
         )
@@ -705,7 +708,9 @@ class LangGraphToOpenAIConverter:
         )
 
         output_messages: List[AnyMessage] = await self._run_graph_with_messages_async(
-            compiled_state_graph=compiled_state_graph, messages=messages
+            chat_request=request,
+            compiled_state_graph=compiled_state_graph,
+            messages=messages,
         )
         return output_messages
 
@@ -769,7 +774,9 @@ class LangGraphToOpenAIConverter:
         )
 
     @staticmethod
-    def create_state(*, messages: List[BaseMessage]) -> MyMessagesState:
+    def create_state(
+        *, chat_request: ChatRequest, messages: List[BaseMessage]
+    ) -> MyMessagesState:
         input1: MyMessagesState = MyMessagesState(
             messages=messages,
             auth_token="foo",
