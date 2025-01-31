@@ -201,12 +201,19 @@ class LangGraphToOpenAIConverter:
                         tool_input: Dict[str, Any] | None = event.get("data", {}).get(
                             "input"
                         )
+
+                        # copy the tool_input to avoid modifying the original
+                        tool_input_display = (
+                            tool_input.copy() if tool_input is not None else None
+                        )
                         # remove auth_token from tool_input
-                        if tool_input and "auth_token" in tool_input:
-                            tool_input.pop("auth_token")
+                        if tool_input_display and "auth_token" in tool_input_display:
+                            tool_input_display["auth_token"] = "***"
 
                         if tool_name:
-                            logger.debug(f"on_tool_start: {tool_name} {tool_input}")
+                            logger.debug(
+                                f"on_tool_start: {tool_name} {tool_input_display}"
+                            )
                             chat_stream_response = ChatCompletionChunk(
                                 id=request_id,
                                 created=int(time.time()),
@@ -216,7 +223,7 @@ class LangGraphToOpenAIConverter:
                                         index=0,
                                         delta=ChoiceDelta(
                                             role="assistant",
-                                            content=f"\n\n> Running Agent {tool_name}: {tool_input}\n",
+                                            content=f"\n\n> Running Agent {tool_name}: {tool_input_display}\n",
                                         ),
                                     )
                                 ],
