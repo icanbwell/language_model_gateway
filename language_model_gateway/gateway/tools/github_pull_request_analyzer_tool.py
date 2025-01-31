@@ -185,7 +185,6 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
         use_verbose_logging: Optional[bool] = None,
         limit: Optional[int] = None,
         include_description: Optional[bool] = None,
-        state: Annotated[InjectedState, InjectedState],
         config: RunnableConfig,
         auth_token: Optional[str] = None,
     ) -> Tuple[str, str]:
