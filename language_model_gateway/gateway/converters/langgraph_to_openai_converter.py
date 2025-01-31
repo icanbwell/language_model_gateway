@@ -201,6 +201,10 @@ class LangGraphToOpenAIConverter:
                         tool_input: Dict[str, Any] | None = event.get("data", {}).get(
                             "input"
                         )
+                        # remove auth_token from tool_input
+                        if tool_input and "auth_token" in tool_input:
+                            tool_input.pop("auth_token")
+
                         if tool_name:
                             logger.debug(f"on_tool_start: {tool_name} {tool_input}")
                             chat_stream_response = ChatCompletionChunk(
