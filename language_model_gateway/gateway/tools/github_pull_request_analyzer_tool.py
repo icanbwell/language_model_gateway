@@ -241,6 +241,8 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
             log_prefix_items.append(f"{sort_by=}")
         if sort_by_direction:
             log_prefix_items.append(f"{sort_by_direction=}")
+        if auth_token:
+            log_prefix_items.append("auth_token=***")
 
         log_prefix = log_prefix + ", ".join(log_prefix_items)
 

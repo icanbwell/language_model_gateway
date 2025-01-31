@@ -22,6 +22,8 @@ from langchain_core.messages import (
     AIMessage,
     AnyMessage,
     ToolMessage,
+    BaseMessage,
+    HumanMessage,
 )
 from langchain_core.messages import AIMessageChunk
 from langchain_core.messages.ai import UsageMetadata
@@ -513,7 +515,7 @@ class LangGraphToOpenAIConverter:
     async def _run_graph_with_messages_async(
         self,
         *,
-        messages: List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]],
+        messages: List[BaseMessage],
         compiled_state_graph: CompiledStateGraph,
     ) -> List[AnyMessage]:
         """
@@ -526,11 +528,10 @@ class LangGraphToOpenAIConverter:
         Returns:
             The list of any messages.
         """
-        input1: Dict[str, List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]] | str] = {
-            "messages": messages,
-            "auth_token": "foo",
-        }
-        output: Dict[str, Any] = await compiled_state_graph.ainvoke(input=input1)
+
+        output: Dict[str, Any] = await compiled_state_graph.ainvoke(
+            input=self.create_state(messages=messages)
+        )
         out_messages: List[AnyMessage] = output["messages"]
         return out_messages
 
@@ -539,7 +540,7 @@ class LangGraphToOpenAIConverter:
         self,
         *,
         request: ChatRequest,
-        messages: List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]],
+        messages: List[BaseMessage],
         compiled_state_graph: CompiledStateGraph,
     ) -> AsyncGenerator[StandardStreamEvent | CustomStreamEvent, None]:
         """
@@ -553,13 +554,10 @@ class LangGraphToOpenAIConverter:
         Yields:
             The standard or custom stream event.
         """
-        input1: Dict[str, List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]] | str] = {
-            "messages": messages,
-            "auth_token": "foo",
-        }
+
         event: StandardStreamEvent | CustomStreamEvent
         async for event in compiled_state_graph.astream_events(
-            input=input1, version="v2"
+            input=self.create_state(messages=messages), version="v2"
         ):
             yield event
 
@@ -626,7 +624,7 @@ class LangGraphToOpenAIConverter:
     # noinspection PyMethodMayBeStatic
     def create_messages_for_graph(
         self, *, messages: Iterable[ChatCompletionMessageParam]
-    ) -> List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]]:
+    ) -> List[BaseMessage]:
         """
         Create messages for the graph.
 
@@ -636,10 +634,70 @@ class LangGraphToOpenAIConverter:
         Returns:
             The list of role and incoming message type tuples.
         """
-        return cast(
+        chat_messages: List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]] = cast(
             List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]],
             [(m["role"], m["content"]) for m in messages],
         )
+
+        def convert_message_content_to_string(content: INCOMING_MESSAGE_TYPES) -> str:
+            """
+            Convert the message content to a string.
+
+            Args:
+                content: The message content.
+
+            Returns:
+                The message content as a string.
+            """
+            text: List[str] = []
+            if isinstance(content, str):
+                text.append(content)
+            elif isinstance(content, list):
+                for content_item in content:
+                    content_item_type: Optional[str] = content_item.get("type")
+                    if content_item_type == "text":
+                        text.append(content_item.get("text") or "")
+                    else:
+                        assert (
+                            False
+                        ), f"Unsupported content item type: {type(content_item)}: {content_item}"
+            return "".join(text)
+
+        messages_: List[BaseMessage] = []
+        for role, content in chat_messages:
+            match role:
+                case "system":
+                    messages_.append(
+                        ToolMessage(
+                            content=convert_message_content_to_string(content),
+                            role="system",
+                        )
+                    )
+                case "user":
+                    messages_.append(
+                        HumanMessage(
+                            content=convert_message_content_to_string(content),
+                            role="user",
+                        )
+                    )
+                case "assistant":
+                    messages_.append(
+                        AIMessage(
+                            content=convert_message_content_to_string(content),
+                            role="assistant",
+                        )
+                    )
+                case "tool":
+                    messages_.append(
+                        ToolMessage(
+                            content=convert_message_content_to_string(content),
+                            role="tool",
+                        )
+                    )
+                case _:
+                    raise ValueError(f"Unexpected role: {role}")
+
+        return messages_
 
     async def run_graph_async(
         self,
@@ -657,8 +715,8 @@ class LangGraphToOpenAIConverter:
         Returns:
             The list of any messages.
         """
-        messages: List[tuple[ROLE_TYPES, INCOMING_MESSAGE_TYPES]] = (
-            self.create_messages_for_graph(messages=request["messages"])
+        messages: List[BaseMessage] = self.create_messages_for_graph(
+            messages=request["messages"]
         )
 
         output_messages: List[AnyMessage] = await self._run_graph_with_messages_async(
@@ -724,3 +782,15 @@ class LangGraphToOpenAIConverter:
             completion_tokens=original.completion_tokens + new_one.completion_tokens,
             total_tokens=original.total_tokens + new_one.total_tokens,
         )
+
+    @staticmethod
+    def create_state(*, messages: List[BaseMessage]) -> MyMessagesState:
+        input1: MyMessagesState = MyMessagesState(
+            messages=messages,
+            auth_token="foo",
+            is_last_step=False,
+            usage_metadata=None,
+            remaining_steps=0,
+            structured_response={},
+        )
+        return input1
