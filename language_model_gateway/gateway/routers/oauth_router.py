@@ -57,8 +57,9 @@ class OAuthRouter:
         )
         self.jwt_secret = jwt_secret or os.getenv("JWT_SECRET", "fallback-secret")
         self.redirect_uri = redirect_uri or os.getenv(
-            "OAUTH_REDIRECT_URI", "http://localhost:8000/auth/callback"
+            "OAUTH_REDIRECT_URI", f"http://localhost:8000{prefix}/callback"
         )
+        self.login_url = f"{prefix}/login"
 
         # Router configuration
         self.prefix = prefix
@@ -196,7 +197,7 @@ class OAuthRouter:
         auth_url = f"{self.authorization_endpoint}?{urlencode(params)}"
         logger.info(f"Redirecting to OAuth provider: {auth_url}")
 
-        return RedirectResponse(url=auth_url)
+        return RedirectResponse(url=auth_url, status_code=401)
 
     async def callback(
         self, request: Request, code: str, state: str

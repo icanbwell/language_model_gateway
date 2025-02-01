@@ -114,7 +114,7 @@ def create_app() -> FastAPI:
                     status_code=401,
                     detail="Not authenticated.  No redirect URI configured.",
                 )
-            return RedirectResponse(url=oauth_router.redirect_uri, status_code=401)
+            return RedirectResponse(url=oauth_router.login_url, status_code=401)
         return JSONResponse({"user": user})
 
     app1.add_api_route("/protected", protected_route, tags=["protected"])
