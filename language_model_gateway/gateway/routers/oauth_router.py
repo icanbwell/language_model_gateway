@@ -3,7 +3,7 @@ import os
 import time
 import uuid
 from enum import Enum
-from typing import Optional, Dict, Any, List, cast, Sequence
+from typing import Optional, Dict, Any, List, cast, Sequence, Annotated
 from urllib.parse import urlencode
 
 import jwt
@@ -12,6 +12,9 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.params import Depends
 from fastapi.responses import RedirectResponse
 
+from language_model_gateway.gateway.api_container import (
+    get_well_known_configuration_reader,
+)
 from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration_reader import (
     WellKnownConfigurationReader,
 )
@@ -76,9 +79,6 @@ class OAuthRouter:
         self.router = APIRouter(
             prefix=self.prefix, tags=self.tags, dependencies=self.dependencies
         )
-
-        # Fetch OpenID configuration
-        self.well_known_configuration_reader = WellKnownConfigurationReader()
 
         # Register routes
         self._register_routes()
@@ -155,13 +155,21 @@ class OAuthRouter:
             logger.warning("Invalid token")
             return None
 
-    async def login(self, request: Request) -> RedirectResponse:
+    async def login(
+        self,
+        request: Request,
+        well_known_configuration_reader: Annotated[
+            WellKnownConfigurationReader, Depends(get_well_known_configuration_reader)
+        ],
+    ) -> RedirectResponse:
         """
         Initiate OAuth login process.
 
         Returns:
             RedirectResponse: Redirect to OAuth provider
         """
+        assert well_known_configuration_reader
+
         # Generate state for CSRF protection
         state = str(uuid.uuid4())
 
@@ -176,7 +184,7 @@ class OAuthRouter:
 
         assert self.well_known_config_url
         well_known_configuration = (
-            self.well_known_configuration_reader.read_from_well_known_configuration(
+            well_known_configuration_reader.read_from_well_known_configuration(
                 well_known_config_url=self.well_known_config_url,
             )
         )
@@ -189,7 +197,13 @@ class OAuthRouter:
         return RedirectResponse(url=auth_url, status_code=401)
 
     async def callback(
-        self, request: Request, code: str, state: str
+        self,
+        request: Request,
+        code: str,
+        state: str,
+        well_known_configuration_reader: Annotated[
+            WellKnownConfigurationReader, Depends(get_well_known_configuration_reader)
+        ],
     ) -> RedirectResponse:
         """
         Handle OAuth callback and set JWT cookie.
@@ -198,14 +212,16 @@ class OAuthRouter:
             request (Request): Incoming request
             code (str): Authorization code from OAuth provider
             state (str): CSRF state parameter
+            well_known_configuration_reader (WellKnownConfigurationReader): Well-known configuration reader instance
 
         Returns:
             RedirectResponse: Redirect after authentication
         """
         assert self.well_known_config_url
+        assert well_known_configuration_reader
         try:
             well_known_configuration = (
-                self.well_known_configuration_reader.read_from_well_known_configuration(
+                well_known_configuration_reader.read_from_well_known_configuration(
                     well_known_config_url=self.well_known_config_url,
                 )
             )

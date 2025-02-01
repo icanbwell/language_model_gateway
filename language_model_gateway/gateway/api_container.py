@@ -18,6 +18,9 @@ from language_model_gateway.gateway.managers.image_generation_manager import (
 )
 from language_model_gateway.gateway.managers.model_manager import ModelManager
 from language_model_gateway.gateway.utilities.cached import cached
+from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration_reader import (
+    WellKnownConfigurationReader,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -74,3 +77,11 @@ def get_file_manager_factory(
     """helper function to get the chat manager"""
     assert isinstance(container, SimpleContainer), type(container)
     return container.resolve(FileManagerFactory)
+
+
+def get_well_known_configuration_reader(
+    container: Annotated[SimpleContainer, Depends(get_container_async)],
+) -> WellKnownConfigurationReader:
+    """helper function to get the chat manager"""
+    assert isinstance(container, SimpleContainer), type(container)
+    return container.resolve(WellKnownConfigurationReader)
