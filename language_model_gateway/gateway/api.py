@@ -8,7 +8,7 @@ from typing import AsyncGenerator, Annotated, List, Any, Dict, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.params import Depends
 from starlette.requests import Request
-from starlette.responses import FileResponse, JSONResponse
+from starlette.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 
 from language_model_gateway.configs.config_reader.config_reader import ConfigReader
@@ -100,16 +100,30 @@ def create_app() -> FastAPI:
     app1.include_router(
         ImagesRouter(image_generation_path=image_generation_path).get_router()
     )
+
+    async def health() -> str:
+        return "OK"
+
+    app1.add_api_route("/health", health)
+
+    async def protected_route(request: Request) -> Response:
+        user: Optional[Dict[str, Any]] = oauth_router.get_current_user(request)
+        if not user:
+            if not oauth_router.redirect_uri:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Not authenticated.  No redirect URI configured.",
+                )
+            return RedirectResponse(url=oauth_router.redirect_uri, status_code=401)
+        return JSONResponse({"user": user})
+
+    app1.add_api_route("/protected", protected_route, tags=["protected"])
+
     return app1
 
 
 # Create the FastAPI app instance
 app = create_app()
-
-
-@app.get("/health")
-async def health() -> str:
-    return "OK"
 
 
 @app.get("/favicon.png", include_in_schema=False)
@@ -130,11 +144,3 @@ async def refresh_data(
     await config_reader.clear_cache()
     configs: List[ChatModelConfig] = await config_reader.read_model_configs_async()
     return JSONResponse({"message": "Configuration refreshed", "data": configs})
-
-
-@app.get("/protected")
-async def protected_route(request: Request) -> JSONResponse:
-    user: Optional[Dict[str, Any]] = oauth_router.get_current_user(request)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return JSONResponse({"user": user})
