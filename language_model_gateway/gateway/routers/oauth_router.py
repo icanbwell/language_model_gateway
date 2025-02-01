@@ -12,6 +12,10 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.params import Depends
 from fastapi.responses import RedirectResponse
 
+from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration_reader import (
+    WellKnownConfigurationReader,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -74,34 +78,10 @@ class OAuthRouter:
         )
 
         # Fetch OpenID configuration
-        self.config = self._fetch_well_known_configuration()
-
-        # Extract important endpoints
-        self.authorization_endpoint = self.config.get("authorization_endpoint")
-        self.token_endpoint = self.config.get("token_endpoint")
-        self.userinfo_endpoint = self.config.get("userinfo_endpoint")
+        self.well_known_configuration_reader = WellKnownConfigurationReader()
 
         # Register routes
         self._register_routes()
-
-    def _fetch_well_known_configuration(self) -> Dict[str, Any]:
-        """
-        Fetch OpenID provider configuration.
-
-        Returns:
-            Dict[str, Any]: OpenID configuration
-
-        Raises:
-            ValueError: If configuration cannot be retrieved
-        """
-        assert self.well_known_config_url, "Well-known configuration URL is required"
-        try:
-            response = requests.get(self.well_known_config_url)
-            response.raise_for_status()
-            return cast(Dict[str, Any], response.json())
-        except requests.RequestException as e:
-            logger.error(f"Failed to fetch well-known configuration: {e}")
-            raise ValueError(f"Failed to fetch well-known configuration: {e}")
 
     def _register_routes(self) -> None:
         """
@@ -194,7 +174,16 @@ class OAuthRouter:
             "state": state,
         }
 
-        auth_url = f"{self.authorization_endpoint}?{urlencode(params)}"
+        assert self.well_known_config_url
+        well_known_configuration = (
+            self.well_known_configuration_reader.read_from_well_known_configuration(
+                well_known_config_url=self.well_known_config_url,
+            )
+        )
+        assert well_known_configuration
+        auth_url = (
+            f"{well_known_configuration.authorization_endpoint}?{urlencode(params)}"
+        )
         logger.info(f"Redirecting to OAuth provider: {auth_url}")
 
         return RedirectResponse(url=auth_url, status_code=401)
@@ -213,8 +202,15 @@ class OAuthRouter:
         Returns:
             RedirectResponse: Redirect after authentication
         """
-        assert self.token_endpoint
+        assert self.well_known_config_url
         try:
+            well_known_configuration = (
+                self.well_known_configuration_reader.read_from_well_known_configuration(
+                    well_known_config_url=self.well_known_config_url,
+                )
+            )
+            assert well_known_configuration
+
             # Exchange code for tokens
             token_data = {
                 "client_id": self.client_id,
@@ -224,7 +220,11 @@ class OAuthRouter:
                 "redirect_uri": self.redirect_uri,
             }
 
-            token_response = requests.post(self.token_endpoint, data=token_data)
+            assert well_known_configuration.token_endpoint
+
+            token_response = requests.post(
+                well_known_configuration.token_endpoint, data=token_data
+            )
             token_response.raise_for_status()
             tokens = token_response.json()
 
@@ -232,11 +232,13 @@ class OAuthRouter:
             access_token = tokens.get("access_token")
 
             assert access_token
-            assert self.userinfo_endpoint
+            assert well_known_configuration.userinfo_endpoint
 
             # Fetch user info
             headers = {"Authorization": f"Bearer {access_token}"}
-            user_response = requests.get(self.userinfo_endpoint, headers=headers)
+            user_response = requests.get(
+                well_known_configuration.userinfo_endpoint, headers=headers
+            )
             user_response.raise_for_status()
             user_info = user_response.json()
 
