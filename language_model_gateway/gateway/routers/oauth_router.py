@@ -314,7 +314,9 @@ def create_oauth_router() -> OAuthRouter:
     Returns:
         OAuthRouter: Configured OAuth router
     """
+    auth_well_known_configuration_uri = os.getenv("AUTH_CONFIGURATION_URI")
+    assert auth_well_known_configuration_uri
     return OAuthRouter(
         prefix="/auth",
-        well_known_config_url="https://accounts.google.com/.well-known/openid-configuration",
+        well_known_config_url=auth_well_known_configuration_uri,
     )
