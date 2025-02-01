@@ -1,8 +1,9 @@
 import logging
 import os
 from datetime import datetime
-from typing import Type, Optional, List, Tuple, Literal
+from typing import Type, Optional, List, Tuple, Literal, Annotated
 
+from langgraph.prebuilt import InjectedState
 from pydantic import BaseModel, Field
 
 from language_model_gateway.gateway.tools.resilient_base_tool import ResilientBaseTool
@@ -79,6 +80,10 @@ class JiraIssuesAnalyzerAgentInput(BaseModel):
         default=100,
         description="Maximum number of jira issues to retrieve",
     )
+    auth_token: Annotated[Optional[str], InjectedState("auth_token")] = Field(
+        default=None,
+        description="Injected state",
+    )
 
 
 class JiraIssuesAnalyzerTool(ResilientBaseTool):
@@ -128,6 +133,7 @@ class JiraIssuesAnalyzerTool(ResilientBaseTool):
         include_full_description: Optional[bool] = None,
         use_verbose_logging: Optional[bool] = None,
         limit: Optional[int] = None,
+        auth_token: Optional[str] = None,
     ) -> Tuple[str, str]:
         """
         Synchronous version of the tool (falls back to async implementation).
@@ -152,6 +158,7 @@ class JiraIssuesAnalyzerTool(ResilientBaseTool):
         include_full_description: Optional[bool] = None,
         use_verbose_logging: Optional[bool] = None,
         limit: Optional[int] = None,
+        auth_token: Optional[str] = None,
     ) -> Tuple[str, str]:
         """
         Asynchronous version of the Jira Issues analyzer tool.
