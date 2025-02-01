@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from os import makedirs, environ
 from pathlib import Path
-from typing import AsyncGenerator, Annotated, List
+from typing import AsyncGenerator, Annotated, List, Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.params import Depends
@@ -22,6 +22,7 @@ from language_model_gateway.gateway.routers.image_generation_router import (
 )
 from language_model_gateway.gateway.routers.images_router import ImagesRouter
 from language_model_gateway.gateway.routers.models_router import ModelsRouter
+from language_model_gateway.gateway.routers.oauth_router import create_oauth_router
 from language_model_gateway.gateway.utilities.endpoint_filter import EndpointFilter
 
 # warnings.filterwarnings("ignore", category=LangChainBetaWarning)
@@ -70,11 +71,16 @@ async def lifespan(app1: FastAPI) -> AsyncGenerator[None, None]:
             raise
 
 
+# Create OAuth router
+oauth_router = create_oauth_router()
+
+
 def create_app() -> FastAPI:
     app1: FastAPI = FastAPI(title="OpenAI-compatible API", lifespan=lifespan)
     app1.include_router(ChatCompletionsRouter().get_router())
     app1.include_router(ModelsRouter().get_router())
     app1.include_router(ImageGenerationRouter().get_router())
+    app1.include_router(oauth_router.get_router())
     # Mount the static directory
     app1.mount(
         "/static",
@@ -124,3 +130,11 @@ async def refresh_data(
     await config_reader.clear_cache()
     configs: List[ChatModelConfig] = await config_reader.read_model_configs_async()
     return JSONResponse({"message": "Configuration refreshed", "data": configs})
+
+
+@app.get("/protected")
+async def protected_route(request: Request) -> JSONResponse:
+    user: Optional[Dict[str, Any]] = oauth_router.get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return JSONResponse({"user": user})
