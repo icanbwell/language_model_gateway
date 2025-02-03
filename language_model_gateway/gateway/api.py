@@ -13,7 +13,10 @@ from starlette.staticfiles import StaticFiles
 
 from language_model_gateway.configs.config_reader.config_reader import ConfigReader
 from language_model_gateway.configs.config_schema import ChatModelConfig
-from language_model_gateway.gateway.api_container import get_config_reader
+from language_model_gateway.gateway.api_container import (
+    get_config_reader,
+    get_jwt_authenticator,
+)
 from language_model_gateway.gateway.routers.chat_completion_router import (
     ChatCompletionsRouter,
 )
@@ -24,6 +27,9 @@ from language_model_gateway.gateway.routers.images_router import ImagesRouter
 from language_model_gateway.gateway.routers.models_router import ModelsRouter
 from language_model_gateway.gateway.routers.oauth_router import create_oauth_router
 from language_model_gateway.gateway.utilities.endpoint_filter import EndpointFilter
+from language_model_gateway.gateway.utilities.tokens.jwt_authenticator.jwt_authenticator import (
+    JwtAuthenticator,
+)
 
 # warnings.filterwarnings("ignore", category=LangChainBetaWarning)
 
@@ -106,8 +112,13 @@ def create_app() -> FastAPI:
 
     app1.add_api_route("/health", health)
 
-    async def protected_route(request: Request) -> Response:
-        user: Optional[Dict[str, Any]] = oauth_router.get_current_user(request)
+    async def protected_route(
+        request: Request,
+        jwt_authenticator: Annotated[JwtAuthenticator, Depends(get_jwt_authenticator)],
+    ) -> Response:
+        user: Optional[Dict[str, Any]] = oauth_router.get_current_user(
+            request=request, jwt_authenticator=jwt_authenticator
+        )
         if not user:
             if not oauth_router.redirect_uri:
                 raise HTTPException(

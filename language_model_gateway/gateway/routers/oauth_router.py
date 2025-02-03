@@ -1,12 +1,8 @@
 import logging
 import os
-import time
-import uuid
 from enum import Enum
-from typing import Optional, Dict, Any, List, cast, Sequence, Annotated
-from urllib.parse import urlencode
+from typing import Optional, Dict, Any, List, Sequence, Annotated
 
-import jwt
 import requests
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.params import Depends
@@ -14,6 +10,10 @@ from fastapi.responses import RedirectResponse
 
 from language_model_gateway.gateway.api_container import (
     get_well_known_configuration_reader,
+    get_jwt_authenticator,
+)
+from language_model_gateway.gateway.utilities.tokens.jwt_authenticator.jwt_authenticator import (
+    JwtAuthenticator,
 )
 from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration_reader import (
     WellKnownConfigurationReader,
@@ -114,53 +114,10 @@ class OAuthRouter:
             description="Clear authentication token",
         )
 
-    def create_jwt_token(self, user_info: Dict[str, Any]) -> str:
-        """
-        Create a JWT token from user information.
-
-        Args:
-            user_info (Dict[str, Any]): User information from OAuth provider
-
-        Returns:
-            str: Signed JWT token
-        """
-        payload = {
-            "sub": user_info.get("sub", ""),
-            "email": user_info.get("email", ""),
-            "name": user_info.get("name", ""),
-            "exp": int(time.time()) + self.cookie_max_age,
-            "iat": int(time.time()),
-        }
-
-        return jwt.encode(payload, self.jwt_secret or "", algorithm="HS256")
-
-    def validate_jwt_token(self, token: str) -> Optional[Dict[str, Any]]:
-        """
-        Validate JWT token.
-
-        Args:
-            token (str): JWT token to validate
-
-        Returns:
-            Optional[Dict[str, Any]]: Decoded token payload or None
-        """
-        assert self.jwt_secret
-        try:
-            payload = jwt.decode(token, self.jwt_secret, algorithms=["HS256"])
-            return cast(Dict[str, Any], payload)
-        except jwt.ExpiredSignatureError:
-            logger.warning("Token has expired")
-            return None
-        except jwt.InvalidTokenError:
-            logger.warning("Invalid token")
-            return None
-
     async def login(
         self,
         request: Request,
-        well_known_configuration_reader: Annotated[
-            WellKnownConfigurationReader, Depends(get_well_known_configuration_reader)
-        ],
+        jwt_authenticator: Annotated[JwtAuthenticator, Depends(get_jwt_authenticator)],
     ) -> RedirectResponse:
         """
         Initiate OAuth login process.
@@ -168,29 +125,15 @@ class OAuthRouter:
         Returns:
             RedirectResponse: Redirect to OAuth provider
         """
-        assert well_known_configuration_reader
-
-        # Generate state for CSRF protection
-        state = str(uuid.uuid4())
-
-        # Construct authorization URL
-        params = {
-            "client_id": self.client_id,
-            "redirect_uri": self.redirect_uri,
-            "response_type": "code",
-            "scope": "openid profile email",
-            "state": state,
-        }
-
+        assert jwt_authenticator
+        assert self.client_id
+        assert self.redirect_uri
         assert self.well_known_config_url
-        well_known_configuration = (
-            well_known_configuration_reader.read_from_well_known_configuration(
-                well_known_config_url=self.well_known_config_url,
-            )
-        )
-        assert well_known_configuration
-        auth_url = (
-            f"{well_known_configuration.authorization_endpoint}?{urlencode(params)}"
+
+        auth_url = await jwt_authenticator.get_login_url(
+            client_id=self.client_id,
+            redirect_uri=self.redirect_uri,
+            well_known_config_url=self.well_known_config_url,
         )
         logger.info(f"Redirecting to OAuth provider: {auth_url}")
 
@@ -248,24 +191,24 @@ class OAuthRouter:
             access_token = tokens.get("access_token")
 
             assert access_token
-            assert well_known_configuration.userinfo_endpoint
-
-            # Fetch user info
-            headers = {"Authorization": f"Bearer {access_token}"}
-            user_response = requests.get(
-                well_known_configuration.userinfo_endpoint, headers=headers
-            )
-            user_response.raise_for_status()
-            user_info = user_response.json()
-
-            # Create JWT token
-            jwt_token = self.create_jwt_token(user_info)
+            # assert well_known_configuration.userinfo_endpoint
+            #
+            # # Fetch user info
+            # headers = {"Authorization": f"Bearer {access_token}"}
+            # user_response = requests.get(
+            #     well_known_configuration.userinfo_endpoint, headers=headers
+            # )
+            # user_response.raise_for_status()
+            # user_info = user_response.json()
+            #
+            # # Create JWT token
+            # jwt_token = self.create_jwt_token(user_info)
 
             # Prepare response with JWT cookie
             response = RedirectResponse(url="/")
             response.set_cookie(
                 key=self.cookie_name,
-                value=jwt_token,
+                value=access_token,
                 httponly=True,
                 secure=True,
                 samesite="lax",
@@ -301,16 +244,23 @@ class OAuthRouter:
         """
         return self.router
 
-    def get_current_user(self, request: Request) -> Optional[Dict[str, Any]]:
+    def get_current_user(
+        self,
+        *,
+        request: Request,
+        jwt_authenticator: JwtAuthenticator,
+    ) -> Optional[Dict[str, Any]]:
         """
         Extract and validate user from JWT token.
 
         Args:
             request (Request): Incoming HTTP request
+            jwt_authenticator (JwtAuthenticator): JWT authenticator instance
 
         Returns:
             Optional[Dict[str, Any]]: User information or None
         """
+        assert self.jwt_secret
         # Check cookie
         token = request.cookies.get(self.cookie_name)
 
@@ -321,7 +271,13 @@ class OAuthRouter:
                 token = auth_header.split(" ")[1]
 
         # Validate token
-        return self.validate_jwt_token(token) if token else None
+        return (
+            jwt_authenticator.validate_jwt_token(
+                token=token, jwt_secret=self.jwt_secret
+            )
+            if token
+            else None
+        )
 
 
 # Example usage in a FastAPI application

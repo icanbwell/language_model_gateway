@@ -11,18 +11,37 @@ logger = logging.getLogger(__name__)
 
 
 class WellKnownConfigurationReader:
+    """
+    Reads OpenID provider configuration from the well-known configuration endpoint
+
+    """
+
+    cache: Dict[str, WellKnownConfiguration] = {}
+
     def read_from_well_known_configuration(
         self, *, well_known_config_url: str
     ) -> Optional[WellKnownConfiguration]:
+        """
+        Read OpenID provider configuration from the well-known configuration endpoint
+
+        :param well_known_config_url: URL of the well-known configuration endpoint
+        :return: OpenID provider configuration
+        """
+        if well_known_config_url in self.cache:
+            return self.cache[well_known_config_url]
+
         config: Dict[str, Any] = self._fetch_well_known_configuration(
             well_known_config_url=well_known_config_url
         )
 
-        return WellKnownConfiguration(
+        well_known_configuration: WellKnownConfiguration = WellKnownConfiguration(
             authorization_endpoint=config.get("authorization_endpoint"),
             token_endpoint=config.get("token_endpoint"),
             userinfo_endpoint=config.get("userinfo_endpoint"),
         )
+        self.cache[well_known_config_url] = well_known_configuration
+
+        return well_known_configuration
 
     @staticmethod
     def _fetch_well_known_configuration(
