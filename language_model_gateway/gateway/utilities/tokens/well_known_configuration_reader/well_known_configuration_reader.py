@@ -1,8 +1,11 @@
 import logging
 from typing import Optional, Dict, Any, cast
 
+import httpx
 import requests
+from httpx import Response
 
+from language_model_gateway.gateway.http.http_client_factory import HttpClientFactory
 from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration import (
     WellKnownConfiguration,
 )
@@ -16,9 +19,12 @@ class WellKnownConfigurationReader:
 
     """
 
+    def __init__(self, *, http_client_factory: HttpClientFactory) -> None:
+        self.http_client_factory: HttpClientFactory = http_client_factory
+
     cache: Dict[str, WellKnownConfiguration] = {}
 
-    def read_from_well_known_configuration(
+    async def read_from_well_known_configuration_async(
         self, *, well_known_config_url: str
     ) -> Optional[WellKnownConfiguration]:
         """
@@ -30,7 +36,7 @@ class WellKnownConfigurationReader:
         if well_known_config_url in self.cache:
             return self.cache[well_known_config_url]
 
-        config: Dict[str, Any] = self._fetch_well_known_configuration(
+        config: Dict[str, Any] = await self._fetch_well_known_configuration_async(
             well_known_config_url=well_known_config_url
         )
 
@@ -43,9 +49,8 @@ class WellKnownConfigurationReader:
 
         return well_known_configuration
 
-    @staticmethod
-    def _fetch_well_known_configuration(
-        *, well_known_config_url: str
+    async def _fetch_well_known_configuration_async(
+        self, *, well_known_config_url: str
     ) -> Dict[str, Any]:
         """
         Fetch OpenID provider configuration.
@@ -57,10 +62,14 @@ class WellKnownConfigurationReader:
             ValueError: If configuration cannot be retrieved
         """
         assert well_known_config_url, "Well-known configuration URL is required"
-        try:
-            response = requests.get(well_known_config_url)
-            response.raise_for_status()
-            return cast(Dict[str, Any], response.json())
-        except requests.RequestException as e:
-            logger.error(f"Failed to fetch well-known configuration: {e}")
-            raise ValueError(f"Failed to fetch well-known configuration: {e}")
+        client: httpx.AsyncClient
+        async with self.http_client_factory.create_http_client(
+            base_url=well_known_config_url
+        ) as client:
+            try:
+                response: Response = await client.get(url=well_known_config_url)
+                response.raise_for_status()
+                return cast(Dict[str, Any], response.json())
+            except requests.RequestException as e:
+                logger.error(f"Failed to fetch well-known configuration: {e}")
+                raise ValueError(f"Failed to fetch well-known configuration: {e}")

@@ -48,6 +48,7 @@ services:
       # service account used to connect to OAuth IDP
       CLIENT_ID: bwell-client-id
       CLIENT_SECRET: bwell-secret
+      OAUTH_WELL_KNOWN_URL: 'http://keycloak:8080/realms/bwell-realm/.well-known/openid-configuration'
     env_file: docker.env
     ports:
       - '5050:5000'

@@ -5,6 +5,9 @@ import jwt
 from typing import Dict, Any, Optional, cast
 from urllib.parse import urlencode
 
+from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration import (
+    WellKnownConfiguration,
+)
 from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration_reader import (
     WellKnownConfigurationReader,
 )
@@ -16,7 +19,6 @@ class JwtAuthenticator:
     def __init__(
         self,
         *,
-        client_id: str,
         cookie_name: str = "jwt_token",
         cookie_max_age: int = 3600,  # 1 hour
         well_known_configuration_reader: WellKnownConfigurationReader,
@@ -25,11 +27,9 @@ class JwtAuthenticator:
         Initialize OAuth authentication using well-known configuration.
 
         Args:
-            client_id (str): OAuth client ID
             cookie_name (str, optional): Name of the JWT cookie
             cookie_max_age (int, optional): Cookie max age in seconds
         """
-        self.client_id = client_id
         self.cookie_name = cookie_name
         self.cookie_max_age = cookie_max_age
         self.well_known_configuration_reader = well_known_configuration_reader
@@ -61,8 +61,8 @@ class JwtAuthenticator:
             "state": state,
         }
         assert well_known_config_url
-        well_known_configuration = (
-            self.well_known_configuration_reader.read_from_well_known_configuration(
+        well_known_configuration: WellKnownConfiguration | None = (
+            await self.well_known_configuration_reader.read_from_well_known_configuration_async(
                 well_known_config_url=well_known_config_url,
             )
         )

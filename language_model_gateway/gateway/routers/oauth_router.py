@@ -163,10 +163,8 @@ class OAuthRouter:
         assert self.well_known_config_url
         assert well_known_configuration_reader
         try:
-            well_known_configuration = (
-                well_known_configuration_reader.read_from_well_known_configuration(
-                    well_known_config_url=self.well_known_config_url,
-                )
+            well_known_configuration = await well_known_configuration_reader.read_from_well_known_configuration_async(
+                well_known_config_url=self.well_known_config_url,
             )
             assert well_known_configuration
 

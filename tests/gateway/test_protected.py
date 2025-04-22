@@ -4,6 +4,7 @@ import httpx
 
 from language_model_gateway.container.simple_container import SimpleContainer
 from language_model_gateway.gateway.api_container import get_container_async
+from language_model_gateway.gateway.http.http_client_factory import HttpClientFactory
 from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration import (
     WellKnownConfiguration,
 )
@@ -14,7 +15,7 @@ from language_model_gateway.gateway.utilities.tokens.well_known_configuration_re
 
 class MockWellKnownConfigurationReader(WellKnownConfigurationReader):
     @override
-    def read_from_well_known_configuration(
+    async def read_from_well_known_configuration_async(
         self, *, well_known_config_url: str
     ) -> Optional[WellKnownConfiguration]:
         return WellKnownConfiguration(
@@ -39,7 +40,10 @@ async def test_protected(async_client: httpx.AsyncClient) -> None:
     # call the /auth/callback endpoint
     test_container: SimpleContainer = await get_container_async()
     test_container.register(
-        WellKnownConfigurationReader, lambda c: MockWellKnownConfigurationReader()
+        WellKnownConfigurationReader,
+        lambda c: MockWellKnownConfigurationReader(
+            http_client_factory=c.resolve(HttpClientFactory),
+        ),
     )
 
     result = await async_client.get(redirect_location)
