@@ -26,7 +26,7 @@ env:
 jobs:
   deploy:
     name: Deploy
-    runs-on: [self-hosted, main]
+    runs-on: main
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
