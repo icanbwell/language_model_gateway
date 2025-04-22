@@ -1,5 +1,6 @@
 import logging
 import os
+import tempfile
 from typing import Type, Literal, Tuple, Optional, List, Dict, Any
 from uuid import uuid4
 
@@ -180,7 +181,9 @@ class NetworkTopologyGeneratorTool(ResilientBaseTool):
             image_file_name: str = f"{uuid4()}.png"
 
             # Use file manager to save the file
-            image_generation_path_ = os.environ.get("IMAGE_GENERATION_PATH", "/tmp")
+            image_generation_path_ = os.environ.get(
+                "IMAGE_GENERATION_PATH", tempfile.gettempdir()
+            )
             file_manager: FileManager = self.file_manager_factory.get_file_manager(
                 folder=image_generation_path_
             )
@@ -204,9 +207,7 @@ class NetworkTopologyGeneratorTool(ResilientBaseTool):
                     "SequenceDiagramGeneratorTool: Failed to save image to disk",
                 )
 
-            artifact: str = (
-                f"NetworkTopologyGeneratorTool: Generated network topology diagram <{url}> "
-            )
+            artifact: str = f"NetworkTopologyGeneratorTool: Generated network topology diagram <{url}> "
             # Return the image bytes and a description
             return url, artifact
 

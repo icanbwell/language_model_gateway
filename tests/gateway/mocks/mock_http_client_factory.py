@@ -18,6 +18,6 @@ class MockHttpClientFactory(HttpClientFactory):
         *,
         base_url: str,
         headers: Optional[Dict[str, str]] = None,
-        timeout: Optional[float] = 5.0
+        timeout: Optional[float] = 5.0,
     ) -> AsyncGenerator[httpx.AsyncClient, None]:
         yield self.fn_http_client()

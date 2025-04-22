@@ -135,9 +135,7 @@ class ScrapingBeeWebScraperTool(ResilientBaseTool):
 
         content: Optional[str] = await self._async_scrape(url=url, query=query)
         if content:
-            artifact: str = (
-                f"ScrapingBeeWebScraperAgent: Scraped content using ScrapingBee from <{url}> "
-            )
+            artifact: str = f"ScrapingBeeWebScraperAgent: Scraped content using ScrapingBee from <{url}> "
             if use_verbose_logging:
                 logger.info(f"\n```\n{content}\n```")
             return await self._extract_text_content_async(content), artifact

@@ -10,5 +10,5 @@ class MockChatResponseProtocol(Protocol):
         *,
         model_config: ChatModelConfig,
         headers: Dict[str, str],
-        chat_request: ChatRequest
+        chat_request: ChatRequest,
     ) -> Dict[str, Any]: ...

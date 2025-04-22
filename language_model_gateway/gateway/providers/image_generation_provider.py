@@ -90,9 +90,9 @@ class ImageGenerationProvider(BaseImageGenerationProvider):
             response_data = [Image(b64_json=image_b64_json)]
         else:
             image_generation_path_ = os.environ["IMAGE_GENERATION_PATH"]
-            assert (
-                image_generation_path_
-            ), "IMAGE_GENERATION_PATH environment variable is not set"
+            assert image_generation_path_, (
+                "IMAGE_GENERATION_PATH environment variable is not set"
+            )
             image_file_name: str = f"{uuid4()}.png"
             file_manager: FileManager = self.file_manager_factory.get_file_manager(
                 folder=image_generation_path_

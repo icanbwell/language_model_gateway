@@ -2,6 +2,7 @@ from abc import ABCMeta
 from typing import Optional, Any, Dict, Union, List
 
 from langchain_core.tools import BaseTool
+from pydantic import BaseModel
 
 
 class ResilientBaseTool(BaseTool, metaclass=ABCMeta):
@@ -36,6 +37,8 @@ class ResilientBaseTool(BaseTool, metaclass=ABCMeta):
 
             # find keys that are not present in self.args_schema
             # and convert them to snake_case
+            assert self.args_schema is not None
+            assert isinstance(self.args_schema, BaseModel)
             input_fields: List[str] = [c for c in self.args_schema.model_fields.keys()]
             tool_input = {
                 (camel_to_snake(key) if key not in input_fields else key): value

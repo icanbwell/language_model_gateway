@@ -25,7 +25,7 @@ class LangChainCompletionsProvider(BaseChatCompletionsProvider):
         *,
         model_factory: ModelFactory,
         lang_graph_to_open_ai_converter: LangGraphToOpenAIConverter,
-        tool_provider: ToolProvider
+        tool_provider: ToolProvider,
     ) -> None:
         self.model_factory: ModelFactory = model_factory
         assert self.model_factory is not None
@@ -46,9 +46,8 @@ class LangChainCompletionsProvider(BaseChatCompletionsProvider):
         *,
         model_config: ChatModelConfig,
         headers: Dict[str, str],
-        chat_request: ChatRequest
+        chat_request: ChatRequest,
     ) -> StreamingResponse | JSONResponse:
-
         # noinspection PyArgumentList
         llm: BaseChatModel = self.model_factory.get_model(
             chat_model_config=model_config

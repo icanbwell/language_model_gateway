@@ -23,7 +23,7 @@ class ImageGenerationManager:
         self,
         *,
         image_generation_request: ImageGenerationRequest,
-        headers: Dict[str, str]
+        headers: Dict[str, str],
     ) -> StreamingResponse | JSONResponse:
         """
         Implements the image generation manager
@@ -39,10 +39,10 @@ class ImageGenerationManager:
         assert isinstance(headers, dict)
         assert isinstance(image_generation_request, dict)
 
-        response: StreamingResponse | JSONResponse = (
-            await self.image_generation_provider.generate_image_async(
-                image_generation_request=image_generation_request, headers=headers
-            )
+        response: (
+            StreamingResponse | JSONResponse
+        ) = await self.image_generation_provider.generate_image_async(
+            image_generation_request=image_generation_request, headers=headers
         )
 
         return response

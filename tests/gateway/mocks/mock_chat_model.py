@@ -96,9 +96,7 @@ class MockChatModel(BaseChatModel):
     def bind_tools(
         self,
         tools: Sequence[
-            Union[
-                typing.Dict[str, Any], type, Callable[[], Any], BaseTool
-            ]  # noqa: UP006
+            Union[typing.Dict[str, Any], type, Callable[[], Any], BaseTool]  # noqa: UP006
         ],
         **kwargs: Any,
     ) -> Runnable[LanguageModelInput, BaseMessage]:

@@ -30,9 +30,7 @@ class ProviderSearchToolInput(BaseModel):
 
 class ProviderSearchTool(ResilientBaseTool):
     name: str = "provider_search"
-    description: str = (
-        "Search for healthcare providers (e.g., doctors, clinics and hospitals) based on various criteria like name, specialty, location, insurance etc."
-    )
+    description: str = "Search for healthcare providers (e.g., doctors, clinics and hospitals) based on various criteria like name, specialty, location, insurance etc."
     args_schema: Type[BaseModel] = ProviderSearchToolInput
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
     api_url: Optional[str] = os.environ.get("PROVIDER_SEARCH_API_URL")
@@ -130,7 +128,6 @@ class ProviderSearchTool(ResilientBaseTool):
         specialty: Optional[List[str]] = None,
         insurance: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-
         variables: Dict[
             str, str | float | int | Dict[str, Any] | List[Dict[str, Any]] | None
         ] = {

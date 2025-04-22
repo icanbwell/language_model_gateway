@@ -1,5 +1,6 @@
 import logging
 import os
+import tempfile
 from typing import Type, Literal, Tuple, Optional, List, Dict, Union, Set
 from uuid import uuid4
 
@@ -161,7 +162,9 @@ class FlowChartGeneratorTool(ResilientBaseTool):
             image_file_name: str = f"{uuid4()}.png"
 
             # Use file manager to save the file (if needed)
-            image_generation_path_ = os.environ.get("IMAGE_GENERATION_PATH", "/tmp")
+            image_generation_path_ = os.environ.get(
+                "IMAGE_GENERATION_PATH", tempfile.gettempdir()
+            )
             file_manager: FileManager = self.file_manager_factory.get_file_manager(
                 folder=image_generation_path_
             )

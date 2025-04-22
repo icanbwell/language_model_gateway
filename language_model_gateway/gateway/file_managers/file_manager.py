@@ -14,7 +14,7 @@ class FileManager:
         file_data: bytes,
         folder: str,
         filename: str,
-        content_type: str = "image/png"
+        content_type: str = "image/png",
     ) -> Optional[str]:
         raise NotImplementedError("Must be implemented in a subclass")
 
@@ -37,6 +37,7 @@ class FileManager:
         extracted_content = ""
         async for chunk in response.body_iterator:
             # Decode the chunk, assuming it is UTF-8 encoded
-            extracted_content += chunk.decode("utf-8")  # type: ignore
+            assert isinstance(chunk, bytes)
+            extracted_content += chunk.decode("utf-8")
 
         return extracted_content

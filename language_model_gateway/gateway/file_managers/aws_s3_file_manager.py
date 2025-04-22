@@ -94,12 +94,12 @@ class AwsS3FileManager(FileManager):
             service_name="s3"
         )
 
-        assert (
-            "s3://" not in folder
-        ), "folder should not contain s3://.  It should be the bucket name"
-        assert (
-            "s3://" not in file_path
-        ), "file_path should not contain s3://.  It should be the file path"
+        assert "s3://" not in folder, (
+            "folder should not contain s3://.  It should be the bucket name"
+        )
+        assert "s3://" not in file_path, (
+            "file_path should not contain s3://.  It should be the file path"
+        )
         s3_url: S3Url = self.get_bucket(folder=f"s3://{folder}", filename=file_path)
         try:
             s3_full_path: str = self.get_full_path(
