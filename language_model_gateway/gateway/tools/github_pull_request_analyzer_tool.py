@@ -241,9 +241,24 @@ class GitHubPullRequestAnalyzerTool(ResilientBaseTool):
         if sort_by_direction:
             log_prefix_items.append(f"{sort_by_direction=}")
         if auth_token:
-            log_prefix_items.append("auth_token=***")
+            if use_verbose_logging:
+                log_prefix_items.append(f"{auth_token=}")
+            else:
+                log_prefix_items.append("auth_token=***")
+        else:
+            if use_verbose_logging:
+                log_prefix_items.append("auth_token=None")
 
         log_prefix = log_prefix + ", ".join(log_prefix_items)
+
+        if use_verbose_logging and not auth_token:
+            logger.info("No auth token provided.  Generating auth token URL.")
+            redirect_uri: str = "http://localhost:8080"
+            return (
+                f"Ask user to navigate to this url to get an auth token before using this tool: {redirect_uri}."
+                f"  The token will be stored in a cookie after the user navigates to the url.",
+                redirect_uri,
+            )
 
         try:
             # Initialize GitHub Pull Request Helper

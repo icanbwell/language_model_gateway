@@ -50,6 +50,12 @@ from language_model_gateway.gateway.utilities.jira.jira_issues_helper import (
 from language_model_gateway.gateway.utilities.databricks.databricks_helper import (
     DatabricksHelper,
 )
+from language_model_gateway.gateway.utilities.tokens.jwt_authenticator.jwt_authenticator import (
+    JwtAuthenticator,
+)
+from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration_reader import (
+    WellKnownConfigurationReader,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -202,6 +208,21 @@ class ContainerFactory:
 
         container.register(
             ModelManager, lambda c: ModelManager(config_reader=c.resolve(ConfigReader))
+        )
+
+        container.register(
+            WellKnownConfigurationReader,
+            lambda c: WellKnownConfigurationReader(
+                http_client_factory=c.resolve(HttpClientFactory)
+            ),
+        )
+
+        container.register(
+            JwtAuthenticator,
+            lambda c: JwtAuthenticator(
+                cookie_max_age=10,
+                well_known_configuration_reader=c.resolve(WellKnownConfigurationReader),
+            ),
         )
         logger.info("DI container initialized")
         return container

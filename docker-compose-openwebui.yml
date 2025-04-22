@@ -21,7 +21,7 @@ services:
       # Supports balanced OpenAI base API URLs, semicolon-separated.
       OPENAI_API_BASE_URL: 'http://dev:5000/api/v1'
       CORS_ALLOW_ORIGIN: '*'
-      OPENAI_API_KEY: 'bedrock'
+      OPENAI_API_KEY: ''
       #      DEFAULT_MODELS: "General Purpose"
       DEFAULT_MODELS: "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
       ENABLE_MODEL_FILTER: True

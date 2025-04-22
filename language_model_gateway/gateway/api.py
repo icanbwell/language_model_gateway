@@ -3,17 +3,20 @@ import os
 from contextlib import asynccontextmanager
 from os import makedirs, environ
 from pathlib import Path
-from typing import AsyncGenerator, Annotated, List
+from typing import AsyncGenerator, Annotated, List, Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.params import Depends
 from starlette.requests import Request
-from starlette.responses import FileResponse, JSONResponse
+from starlette.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 
 from language_model_gateway.configs.config_reader.config_reader import ConfigReader
 from language_model_gateway.configs.config_schema import ChatModelConfig
-from language_model_gateway.gateway.api_container import get_config_reader
+from language_model_gateway.gateway.api_container import (
+    get_config_reader,
+    get_jwt_authenticator,
+)
 from language_model_gateway.gateway.routers.chat_completion_router import (
     ChatCompletionsRouter,
 )
@@ -22,7 +25,11 @@ from language_model_gateway.gateway.routers.image_generation_router import (
 )
 from language_model_gateway.gateway.routers.images_router import ImagesRouter
 from language_model_gateway.gateway.routers.models_router import ModelsRouter
+from language_model_gateway.gateway.routers.oauth_router import create_oauth_router
 from language_model_gateway.gateway.utilities.endpoint_filter import EndpointFilter
+from language_model_gateway.gateway.utilities.tokens.jwt_authenticator.jwt_authenticator import (
+    JwtAuthenticator,
+)
 
 # warnings.filterwarnings("ignore", category=LangChainBetaWarning)
 
@@ -70,11 +77,16 @@ async def lifespan(app1: FastAPI) -> AsyncGenerator[None, None]:
             raise
 
 
+# Create OAuth router
+oauth_router = create_oauth_router()
+
+
 def create_app() -> FastAPI:
     app1: FastAPI = FastAPI(title="OpenAI-compatible API", lifespan=lifespan)
     app1.include_router(ChatCompletionsRouter().get_router())
     app1.include_router(ModelsRouter().get_router())
     app1.include_router(ImageGenerationRouter().get_router())
+    app1.include_router(oauth_router.get_router())
     # Mount the static directory
     app1.mount(
         "/static",
@@ -94,16 +106,35 @@ def create_app() -> FastAPI:
     app1.include_router(
         ImagesRouter(image_generation_path=image_generation_path).get_router()
     )
+
+    async def health() -> str:
+        return "OK"
+
+    app1.add_api_route("/health", health)
+
+    async def protected_route(
+        request: Request,
+        jwt_authenticator: Annotated[JwtAuthenticator, Depends(get_jwt_authenticator)],
+    ) -> Response:
+        user: Optional[Dict[str, Any]] = oauth_router.get_current_user(
+            request=request, jwt_authenticator=jwt_authenticator
+        )
+        if not user:
+            if not oauth_router.redirect_uri:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Not authenticated.  No redirect URI configured.",
+                )
+            return RedirectResponse(url=oauth_router.login_url, status_code=401)
+        return JSONResponse({"user": user})
+
+    app1.add_api_route("/protected", protected_route, tags=["protected"])
+
     return app1
 
 
 # Create the FastAPI app instance
 app = create_app()
-
-
-@app.get("/health")
-async def health() -> str:
-    return "OK"
 
 
 @app.get("/favicon.png", include_in_schema=False)

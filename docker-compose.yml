@@ -42,6 +42,13 @@ services:
 #      JIRA_USERNAME: "imran.qureshi@icanbwell.com"
       JIRA_MAXIMUM_PROJECTS: "100"
       JIRA_MAXIMUM_ISSUES_PER_PROJECT: "100"
+      # setting for Auth
+      AUTH_CONFIGURATION_URI: 'http://keycloak:8080/realms/bwell-realm/.well-known/openid-configuration'
+      AUTH_JWKS_URL: 'http://keycloak:8080/realms/bwell-realm/protocol/openid-connect/certs'
+      # service account used to connect to OAuth IDP
+      CLIENT_ID: bwell-client-id
+      CLIENT_SECRET: bwell-secret
+      OAUTH_WELL_KNOWN_URL: 'http://keycloak:8080/realms/bwell-realm/.well-known/openid-configuration'
     env_file: docker.env
     ports:
       - '5050:5000'
