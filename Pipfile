@@ -86,6 +86,8 @@ backoff = ">=2.2.1"
 databricks-sdk = ">=0.42.0"
 # pandas is a Python library for working with data
 pandas = ">=2.2.3"
+# mcp-sdk is a Python library for implementing MCP protocol
+mcp = {version = ">=1.6.0", extras = ["fastapi"]}
 
 [dev-packages]
 # pre-commit is a Python library for running pre-commit checks
