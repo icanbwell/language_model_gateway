@@ -34,12 +34,16 @@ class DatabricksHelper:
             Pandas DataFrame with query results
         """
         try:
+            assert statement_response.manifest
+            assert statement_response.manifest.schema
+            assert statement_response.manifest.schema.columns
             # Extract column names
             column_names = [
-                column.name for column in statement_response.manifest.schema.columns  # type: ignore
+                column.name for column in statement_response.manifest.schema.columns
             ]
+            assert statement_response.result
             # Extract data array
-            data_array = statement_response.result.data_array  # type: ignore
+            data_array = statement_response.result.data_array
             # Create DataFrame
             df = pd.DataFrame(data_array, columns=column_names)
 
@@ -94,13 +98,14 @@ class DatabricksHelper:
             results = ws_client.statement_execution.execute_statement(
                 query, warehouse_id=warehouse_id
             )
-            self.logger.debug(f"Initial results status: {results.status.state}")  # type: ignore
+            assert results.status is not None
+            self.logger.debug(f"Initial results status: {results.status.state}")
 
             # Track start time for timeout
             start_time = time.time()
 
             # Wait while statement is pending
-            while results.status.state == StatementState.PENDING:  # type: ignore
+            while results.status.state == StatementState.PENDING:
                 # Check for timeout
                 self.logger.debug("Waiting for query to complete")
                 if time.time() - start_time >= max_wait_time:
@@ -112,16 +117,20 @@ class DatabricksHelper:
 
                 # Refresh the statement status
                 self.logger.debug("Refreshing statement status")
-                results = self.ws_client.statement_execution.get_statement(results.statement_id)  # type: ignore
-
-                if results.status.state != StatementState.PENDING:  # type: ignore
+                assert results.statement_id is not None
+                results = ws_client.statement_execution.get_statement(
+                    results.statement_id
+                )
+                assert results.status is not None
+                if results.status.state != StatementState.PENDING:
                     break
 
+            assert results.status is not None
             # Check for failed state
-            if results.status.state == StatementState.FAILED:  # type: ignore
+            if results.status.state == StatementState.FAILED:
                 error_message = (
-                    results.status.error.message  # type: ignore
-                    if results.status.error  # type: ignore
+                    results.status.error.message
+                    if results.status.error
                     else "Unknown error"
                 )
                 self.logger.error(f"Error executing Databricks query: {error_message}")

@@ -80,9 +80,9 @@ class ChatCompletionManager:
             model: str = chat_request["model"]
             assert model is not None
 
-            configs: List[ChatModelConfig] = (
-                await self.config_reader.read_model_configs_async()
-            )
+            configs: List[
+                ChatModelConfig
+            ] = await self.config_reader.read_model_configs_async()
 
             # Find the model config
             model_config: ChatModelConfig | None = next(
@@ -124,12 +124,12 @@ class ChatCompletionManager:
                     f"Running chat completion for {chat_request} with headers {headers}"
                 )
             # Use the provider to get the completions
-            response: StreamingResponse | JSONResponse = (
-                await provider.chat_completions(
-                    model_config=model_config,
-                    headers=headers,
-                    chat_request=chat_request,
-                )
+            response: (
+                StreamingResponse | JSONResponse
+            ) = await provider.chat_completions(
+                model_config=model_config,
+                headers=headers,
+                chat_request=chat_request,
             )
             return response
         except Exception as e:

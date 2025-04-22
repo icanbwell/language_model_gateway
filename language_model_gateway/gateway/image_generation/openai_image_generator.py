@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIImageGenerator(ImageGenerator):
-
     @staticmethod
     async def _invoke_model_async(
         prompt: str,
@@ -26,9 +25,9 @@ class OpenAIImageGenerator(ImageGenerator):
         """Synchronous OpenAI image generation"""
 
         openai_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-        assert (
-            openai_api_key is not None
-        ), "OPENAI_API_KEY environment variable is not set"
+        assert openai_api_key is not None, (
+            "OPENAI_API_KEY environment variable is not set"
+        )
 
         client = AsyncOpenAI(api_key=openai_api_key)
 

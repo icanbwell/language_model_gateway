@@ -14,5 +14,5 @@ class BaseImageGenerationProvider:
         self,
         *,
         image_generation_request: ImageGenerationRequest,
-        headers: Dict[str, str]
+        headers: Dict[str, str],
     ) -> StreamingResponse | JSONResponse: ...

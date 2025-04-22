@@ -31,8 +31,8 @@ class HealthSummaryGeneratorTool(ResilientBaseTool):
     name: str = "health_summary_generator"
 
     description: str = """
-    The HealthSummaryGeneratorTool is designed to generate comprehensive health summary reports for users 
-    by processing claims data files stored in S3. This tool extracts and deduplicates information about 
+    The HealthSummaryGeneratorTool is designed to generate comprehensive health summary reports for users
+    by processing claims data files stored in S3. This tool extracts and deduplicates information about
     diagnoses, procedures, and medications for each user, producing a structured JSON report.
     Features:
     - Accepts a file URL pointing to a claims file in S3.

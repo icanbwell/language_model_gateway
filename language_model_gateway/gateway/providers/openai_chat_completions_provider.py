@@ -126,7 +126,6 @@ class OpenAiChatCompletionsProvider(BaseChatCompletionsProvider):
         chat_request: ChatRequest,
         headers: Dict[str, str],
     ) -> AsyncGenerator[str, None]:
-
         logger.info(f"Streaming response {request_id} from agent")
         async with self.http_client_factory.create_http_client(
             base_url="http://test"

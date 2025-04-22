@@ -137,9 +137,9 @@ class LangGraphToOpenAIConverter:
                                 content
                             )
 
-                            assert isinstance(
-                                content_text, str
-                            ), f"content_text: {content_text} (type: {type(content_text)})"
+                            assert isinstance(content_text, str), (
+                                f"content_text: {content_text} (type: {type(content_text)})"
+                            )
 
                             if (
                                 os.environ.get("LOG_INPUT_AND_OUTPUT", "0") == "1"
@@ -432,9 +432,9 @@ class LangGraphToOpenAIConverter:
                 return chat_request, json_response_requested
             case "json_object":
                 json_response_requested = True
-                json_object_system_message_text: str = """                
+                json_object_system_message_text: str = """
                 Respond only with a JSON object or array.
-                
+
                 Output follows this example format:
                 <json>
                 json  here
@@ -455,13 +455,13 @@ class LangGraphToOpenAIConverter:
                     response_format,
                 )
                 json_schema: JSONSchema | None = json_response_format.get("json_schema")
-                assert (
-                    json_schema is not None
-                ), "json_schema should be specified in response_format if type is json_schema"
-                json_schema_system_message_text: str = f"""                
+                assert json_schema is not None, (
+                    "json_schema should be specified in response_format if type is json_schema"
+                )
+                json_schema_system_message_text: str = f"""
                 Respond only with a JSON object or array using the provided schema:
-                ```{json_schema}``` 
-    
+                ```{json_schema}```
+
                 Output follows this example format:
                 <json>
                 json  here
@@ -830,7 +830,6 @@ class LangGraphToOpenAIConverter:
             is_last_step=False,
             usage_metadata=None,
             remaining_steps=0,
-            structured_response={},
         )
         return input1
 

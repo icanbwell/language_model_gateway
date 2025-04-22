@@ -39,9 +39,9 @@ class ConfigReader:
     # noinspection PyMethodMayBeStatic
     async def read_model_configs_async(self) -> List[ChatModelConfig]:
         config_path: str = os.environ["MODELS_OFFICIAL_PATH"]
-        assert (
-            config_path is not None
-        ), "MODELS_OFFICIAL_PATH environment variable is not set"
+        assert config_path is not None, (
+            "MODELS_OFFICIAL_PATH environment variable is not set"
+        )
         models_zip_path: Optional[str] = os.environ.get("MODELS_ZIP_PATH", "")
 
         # Check cache first
@@ -83,9 +83,9 @@ class ConfigReader:
                     models = await self.read_models_from_path_async(config_path)
                     config_testing_path = os.environ.get("MODELS_TESTING_PATH")
                     if config_testing_path:
-                        models_testing: List[ChatModelConfig] = (
-                            await self.read_models_from_path_async(config_testing_path)
-                        )
+                        models_testing: List[
+                            ChatModelConfig
+                        ] = await self.read_models_from_path_async(config_testing_path)
                         if models_testing and len(models_testing) > 0:
                             models.append(
                                 ChatModelConfig(

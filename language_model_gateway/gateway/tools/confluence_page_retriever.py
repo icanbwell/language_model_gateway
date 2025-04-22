@@ -52,9 +52,9 @@ class ConfluencePageRetriever(ResilientBaseTool):
         log_prefix: str = f"ConfluencePageRetriever: page_id={page_id}"
 
         try:
-            confluence_page: Optional[ConfluenceDocument] = (
-                await self.confluence_helper.retrieve_page_by_id(page_id=page_id)
-            )
+            confluence_page: Optional[
+                ConfluenceDocument
+            ] = await self.confluence_helper.retrieve_page_by_id(page_id=page_id)
 
             if not confluence_page:
                 error_msg = "Error retrieving Confluence page: Page not found"

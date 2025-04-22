@@ -86,9 +86,9 @@ def create_app() -> FastAPI:
 
     image_generation_path: str = environ["IMAGE_GENERATION_PATH"]
 
-    assert (
-        image_generation_path is not None
-    ), "IMAGE_GENERATION_PATH environment variable must be set"
+    assert image_generation_path is not None, (
+        "IMAGE_GENERATION_PATH environment variable must be set"
+    )
 
     makedirs(image_generation_path, exist_ok=True)
     app1.include_router(

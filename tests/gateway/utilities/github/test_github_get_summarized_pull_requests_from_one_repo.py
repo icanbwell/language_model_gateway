@@ -84,9 +84,7 @@ async def test_github_get_summarized_pull_requests_from_one_repo(
         )
 
         # mock pull API
-        pull_url: str = (
-            f"https://api.github.com/repos/{org_name}/{repo_name}/pulls?state=closed&sort=created&direction=desc&per_page={max_pull_requests}&page=1"
-        )
+        pull_url: str = f"https://api.github.com/repos/{org_name}/{repo_name}/pulls?state=closed&sort=created&direction=desc&per_page={max_pull_requests}&page=1"
         sample_pull_content: List[Dict[str, Any]] = [
             {
                 "url": "https://api.github.com/repos/icanbwell/helix.pipelines/pulls/1",
@@ -137,7 +135,6 @@ async def test_github_get_summarized_pull_requests_from_one_repo(
     )
 
     try:
-
         # Get PR counts with optional parameters
         pull_request_result: GithubPullRequestResult = (
             await pr_counter.retrieve_closed_prs(

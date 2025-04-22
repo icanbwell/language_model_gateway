@@ -34,9 +34,7 @@ class GitHubPullRequestRetriever(ResilientBaseTool):
     """
 
     name: str = "github_pull_request_retriever"
-    description: str = (
-        "Retrieves information about a GitHub pull request given its URL, such as title, description, etc."
-    )
+    description: str = "Retrieves information about a GitHub pull request given its URL, such as title, description, etc."
 
     args_schema: Type[BaseModel] = GitHubPullRequestRetrieverInput
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"

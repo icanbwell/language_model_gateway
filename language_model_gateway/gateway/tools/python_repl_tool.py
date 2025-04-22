@@ -16,9 +16,7 @@ class PythonReplToolInput(BaseModel):
 
 class PythonReplTool(ResilientBaseTool):
     name: str = "python_repl"
-    description: str = (
-        "A Python shell. Use this to execute python commands. Input should be a valid python command. If you want to see the output of a value, you should print it out with `print(...)`."
-    )
+    description: str = "A Python shell. Use this to execute python commands. Input should be a valid python command. If you want to see the output of a value, you should print it out with `print(...)`."
     args_schema: Type[BaseModel] = PythonReplToolInput
 
     async def _arun(self, query: str) -> str:

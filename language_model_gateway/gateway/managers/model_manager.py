@@ -20,9 +20,9 @@ class ModelManager:
         *,
         headers: Dict[str, str],
     ) -> Dict[str, str | List[Dict[str, str | int]]]:
-        configs: List[ChatModelConfig] = (
-            await self.config_reader.read_model_configs_async()
-        )
+        configs: List[
+            ChatModelConfig
+        ] = await self.config_reader.read_model_configs_async()
         logger = logging.getLogger(__name__)
         logger.info("Received request for models")
         # get time in seconds since epoch from ten minutes ago

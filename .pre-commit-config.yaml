@@ -1,36 +1,106 @@
-exclude: (^.idea/|^notebooks/)
+exclude: (^.idea/|^docsrc|^docs)
+
 repos:
+  # Pre-commit hooks for basic checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      # File and formatting checks
       - id: end-of-file-fixer
         types: [ python ]
+      - id: trailing-whitespace
+        types: [ python ]
+
+      # Conflict and security checks
+      - id: check-case-conflict
+        types: [ python ]
+      - id: check-docstring-first
+        types: [ python ]
+
+      # Security scans
+      - id: detect-aws-credentials
+        types: [ python ]
+        args: [ '--allow-missing-credentials' ]
+      - id: detect-private-key
+        types: [ python ]
+
+      # Dependency and import checks
+      - id: check-ast
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+
+  # Local hooks for Ruff (using local installation)
   - repo: local
     hooks:
       - id: ruff
-        name: ruff
-        language: system
-        types: [ python ]
+        name: Ruff
         entry: ruff
-        require_serial: true
-        args: [ 'check', '--fix']
-      - id: autoflake
-        name: autoflake
         language: system
         types: [ python ]
-        entry: autoflake
+        args: [ check, --fix, --show-fixes ]
         require_serial: true
-        args: [ '--in-place', '--remove-all-unused-imports', '--ignore-init-module-imports']
-      - id: black
-        name: black
+
+      - id: ruff-format
+        name: Ruff Format
+        entry: ruff
         language: system
-        types: [python]
+        types: [ python ]
+        args: [ format ]
         require_serial: true
-        entry: black
+
+      # MyPy for type checking
       - id: mypy
         name: mypy
         language: system
         types: [ python ]
         entry: mypy
         require_serial: true
-        args: [ --strict, --python-version=3.12, --show-error-codes, --allow-untyped-decorators ]
+        args: [
+          --strict,
+          --python-version=3.12,
+          --show-error-codes,
+          --allow-untyped-decorators,
+          --ignore-missing-imports
+        ]
+
+      # Bandit for security scanning
+      - id: bandit
+        name: bandit
+        language: system
+        types: [ python ]
+        entry: bandit
+        require_serial: true
+        args: [
+          '-q',
+          '--skip', 'B101,B105,B106',
+          '-r',
+          '--severity-level', 'medium'
+        ]
+
+  # Pygrep hooks for additional checks
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-use-type-annotations
+      - id: python-check-blanket-noqa
+      - id: python-check-blanket-type-ignore
+      - id: python-check-mock-methods
+      - id: python-no-eval
+      - id: python-no-log-warn
+
+  # Optional: Secret scanning
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: [ 'scan' ]
+        exclude: >
+          (?x)^(
+            tests/.*|
+            docker-compose\.yml|
+            .helm/.*|
+            docker-compose-openwebui\.yml|
+            docker-compose-openwebui-auth\.yml
+          )$
