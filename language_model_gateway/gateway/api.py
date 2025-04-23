@@ -96,8 +96,8 @@ def create_app() -> FastAPI:
         ImagesRouter(image_generation_path=image_generation_path).get_router()
     )
 
-    # Mount MCP server
-    app1.mount("/mcp", MCPServerRouter().get_router())
+    # Include MCP Router
+    app1.include_router(MCPServerRouter().get_router())
 
     return app1
 
