@@ -14,6 +14,7 @@ from starlette.staticfiles import StaticFiles
 from language_model_gateway.configs.config_reader.config_reader import ConfigReader
 from language_model_gateway.configs.config_schema import ChatModelConfig
 from language_model_gateway.gateway.api_container import get_config_reader
+from language_model_gateway.gateway.mcp_server_router import MCPServerRouter
 from language_model_gateway.gateway.routers.chat_completion_router import (
     ChatCompletionsRouter,
 )
@@ -94,6 +95,10 @@ def create_app() -> FastAPI:
     app1.include_router(
         ImagesRouter(image_generation_path=image_generation_path).get_router()
     )
+
+    # Mount MCP server
+    app1.mount("/mcp", MCPServerRouter().get_router())
+
     return app1
 
 
