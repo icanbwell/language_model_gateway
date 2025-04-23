@@ -40,6 +40,7 @@ class OpenAIImageGenerator(ImageGenerator):
             response_format="b64_json",
         )
 
+        assert response.data is not None, "Response data is None"
         # Extract the base64 encoded image and decode
         base64_image: Optional[str] = response.data[0].b64_json
         assert base64_image is not None, "Base64 image is None"

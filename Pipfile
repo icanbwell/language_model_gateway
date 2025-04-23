@@ -87,7 +87,9 @@ databricks-sdk = ">=0.42.0"
 # pandas is a Python library for working with data
 pandas = ">=2.2.3"
 # mcp-sdk is a Python library for implementing MCP protocol
-mcp = {version = ">=1.6.0", extras = ["fastapi"]}
+mcp = {version = ">=1.6.0", extras = ["fastapi", "ws"]}
+# langchain-mcp-adapters is a Python library for implementing MCP adapters
+langchain-mcp-adapters = ">=0.0.9"
 
 [dev-packages]
 # pre-commit is a Python library for running pre-commit checks
@@ -119,6 +121,7 @@ bandit = ">=1.8.3"
 ruff = ">=0.11.5"
 # pytest-cov is needed for measuring test coverage
 pytest-cov = ">=6.1.1"
+
 
 [requires]
 python_version = "3.12"
