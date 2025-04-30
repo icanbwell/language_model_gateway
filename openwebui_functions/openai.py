@@ -11,6 +11,7 @@ import time
 from typing import Optional, Callable, Awaitable, Any, Dict
 
 from pydantic import BaseModel, Field
+from starlette.requests import Request
 
 
 class Pipe:
@@ -61,7 +62,7 @@ class Pipe:
     async def pipe(
         self,
         body: Dict[str, Any],
-        __request__: Optional[Dict[str, Any]] = None,
+        __request__: Optional[Request] = None,
         __user__: Optional[Dict[str, Any]] = None,
         __event_emitter__: Callable[[Dict[str, Any]], Awaitable[None]] | None = None,
         __event_call__: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]
@@ -79,6 +80,8 @@ class Pipe:
             #     __event_emitter__, "info", "Starting Chain", False
             # )
             # result = cast(Dict[str,Any], await generate_chat_completion(__request__, body, user))
+            if __request__ is None or __user__ is None:
+                raise ValueError("Request and user information must be provided.")
             result: Dict[str, Any] = {
                 "id": "chatcmpl-B9MBs8CjcvOU2jLn4n570S5qMJKcT",
                 "object": "chat.completion",
@@ -89,7 +92,7 @@ class Pipe:
                         "index": 0,
                         "message": {
                             "role": "assistant",
-                            "content": "Hello! How can I assist you today?",
+                            "content": f"headers={__request__.headers}, cookies={__request__.cookies} {__user__=} {body=}",
                             "annotations": [],
                         },
                         "logprobs": None,
@@ -111,7 +114,7 @@ class Pipe:
                 "service_tier": "default",
             }
 
-            # await self.emit_status(__event_emitter__, "info", "Complete", True)
+            await self.emit_status(__event_emitter__, "info", "Complete", True)
             return result
         except Exception as e:
             await self.emit_status(__event_emitter__, "error", str(e), True)
