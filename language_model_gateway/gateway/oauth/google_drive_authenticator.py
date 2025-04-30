@@ -9,7 +9,10 @@ from googleapiclient.http import MediaIoBaseDownload
 from google_auth_oauthlib.flow import Flow
 
 from language_model_gateway.gateway.oauth.google_client_secrets_loader import (
-    GoogleClientSecretsLoader,
+    GoogleCredentialsManager,
+)
+from language_model_gateway.gateway.oauth.google_credentials_converter import (
+    GoogleCredentialsConverter,
 )
 
 logger = logging.getLogger(__name__)
@@ -26,7 +29,11 @@ class GoogleDriveAuthenticator:
             redirect_uri (str): OAuth redirect URI
             scopes (Optional[list[str]]): OAuth scopes
         """
-        self.client_secrets = GoogleClientSecretsLoader.load_client_secrets()
+        self.client_secrets: Credentials = (
+            GoogleCredentialsConverter.dict_to_credentials(
+                GoogleCredentialsManager.load_credentials()
+            )
+        )
         self.redirect_uri = redirect_uri
         self.scopes = scopes or [
             "https://www.googleapis.com/auth/drive.readonly",
@@ -34,6 +41,7 @@ class GoogleDriveAuthenticator:
             "email",
         ]
 
+    # noinspection PyMethodMayBeStatic
     def validate_okta_token(self, okta_token: str) -> Dict[str, Any]:
         """
         Validate Okta JWT token.
@@ -110,6 +118,7 @@ class GoogleDriveAuthenticator:
         flow.fetch_token(code=authorization_code)
         return cast(Credentials, flow.credentials)
 
+    # noinspection PyMethodMayBeStatic
     def download_drive_file(self, credentials: Credentials, file_id: str) -> bytes:
         """
         Download file from Google Drive.
