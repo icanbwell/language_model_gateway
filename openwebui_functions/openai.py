@@ -77,7 +77,9 @@ class Pipe:
             await self.emit_status(
                 __event_emitter__,
                 "info",
-                f"/initiating Chain: {__request__=} {__user__=} {body=}",
+                f"/initiating Chain: headers={__request__.headers if __request__ else None}"
+                f", cookies={__request__.cookies if __request__ else None}"
+                f" {__user__=} {body=}",
                 False,
             )
 
@@ -153,7 +155,7 @@ class Pipe:
                         {
                             "index": 0,
                             "delta": {
-                                "content": f", headers={__request__.headers}, cookies={__request__.cookies} {__user__=} {body=}",
+                                "content": f"\nheaders=\n{__request__.headers}\ncookies=\n{__request__.cookies}\n{__user__=}\n{body=}",
                             },
                             "finish_reason": None,
                         }
@@ -167,7 +169,9 @@ class Pipe:
                     "choices": [
                         {
                             "index": 0,
-                            "delta": {"content": " response."},
+                            "delta": {
+                                "content": f"\nOAuth_id_token:\n{__request__.cookies.get('oauth_id_token')}\n",
+                            },
                             "finish_reason": None,
                         }
                     ],

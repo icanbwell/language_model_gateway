@@ -89,6 +89,7 @@ up-open-webui-auth: clean_database create-certs ## starts docker containers
 		exit 1; \
 	fi
 	make insert-admin-user
+	make set-admin-user-role
 	@echo OpenWebUI: http://localhost:3050  https://open-webui.localhost tester/password
 	@echo Keycloak: http://keycloak:8080 admin/password
 	@echo OIDC debugger: http://localhost:8085
@@ -153,6 +154,11 @@ insert-admin-user:
     "INSERT INTO public.\"user\" (id,name,email,\"role\",profile_image_url,api_key,created_at,updated_at,last_active_at,settings,info,oauth_sub) \
     SELECT '8d967d73-99b8-40ff-ac3b-c71ac19e1286','User','admin@localhost','admin','/user.png',NULL,1735089600,1735089600,1735089609,'{"ui": {"version": "0.4.8"}}','null',NULL \
     WHERE NOT EXISTS (SELECT 1 FROM public.\"user\" WHERE id = '8d967d73-99b8-40ff-ac3b-c71ac19e1286');"
+
+.PHONY: set-admin-user-role
+set-admin-user-role:
+	docker exec -i language_model_gateway-open-webui-db-1 psql -U myapp_user -d myapp_db -p 5431 -c \
+    "UPDATE public.\"user\" SET \"role\"='admin' WHERE name='admin@tester.com';"
 
 CERT_DIR := certs
 CERT_KEY := $(CERT_DIR)/open-webui.localhost-key.pem
