@@ -1,15 +1,14 @@
-"""
-title: LangChain Pipe Function
+"""title: LangChain Pipe Function (Streaming Version)
 author: Colby Sawyer @ Attollo LLC (mailto:colby.sawyer@attollodefense.com)
 author_url: https://github.com/ColbySawyer7
-version: 0.1.0
-
-This module defines a Pipe class that utilizes LangChain
+version: 0.2.0
+This module defines a Pipe class that utilizes LangChain with streaming support
 """
 
+import asyncio
 import time
-from typing import Optional, Callable, Awaitable, Any, Dict
-from typing import AsyncGenerator, Iterator
+from typing import AsyncGenerator
+from typing import Optional, Callable, Awaitable, Any, Dict, Union
 
 from pydantic import BaseModel, Field
 from starlette.requests import Request
@@ -31,11 +30,10 @@ class Pipe:
         self.name: str = "LangChain Pipe"
         self.valves = self.Valves()
         self.last_emit_time: float = 0
-        pass
 
     async def emit_status(
         self,
-        __event_emitter__: Callable[[Dict[str, Any]], Awaitable[None]] | None,
+        __event_emitter__: Optional[Callable[[Dict[str, Any]], Awaitable[None]]],
         level: str,
         message: str,
         done: bool,
@@ -61,25 +59,18 @@ class Pipe:
             )
             self.last_emit_time = current_time
 
-    async def pipe(
+    async def stream_response(
         self,
+        *,
         body: Dict[str, Any],
         __request__: Optional[Request] = None,
         __user__: Optional[Dict[str, Any]] = None,
         __event_emitter__: Callable[[Dict[str, Any]], Awaitable[None]] | None = None,
         __event_call__: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]
         | None = None,
-    ) -> (
-        Dict[str, Any]
-        | StreamingResponse
-        | BaseModel
-        | Iterator[Dict[str, Any] | BaseModel | str]
-        | AsyncGenerator[Dict[str, Any] | BaseModel | str, None]
-    ):
+    ) -> AsyncGenerator[str, None]:
         """
-        Called from https://github.com/open-webui/open-webui/blob/main/backend/open_webui/functions.py
-
-
+        Async generator to stream response chunks
         """
         try:
             await self.emit_status(
@@ -88,65 +79,69 @@ class Pipe:
                 f"/initiating Chain: {__request__=} {__user__=} {body=}",
                 False,
             )
-            # user = None
-            # await self.emit_status(
-            #     __event_emitter__, "info", "Starting Chain", False
-            # )
-            # result = cast(Dict[str,Any], await generate_chat_completion(__request__, body, user))
+
             if __request__ is None or __user__ is None:
                 raise ValueError("Request and user information must be provided.")
-            result: Dict[str, Any] = {
-                "id": "chatcmpl-B9MBs8CjcvOU2jLn4n570S5qMJKcT",
-                "object": "chat.completion",
-                "created": 1741569952,
-                "model": "gpt-4.1-2025-04-14",
-                "choices": [
-                    {
-                        "index": 0,
-                        "message": {
-                            "role": "assistant",
-                            "content": f"headers={__request__.headers}, cookies={__request__.cookies} {__user__=} {body=}",
-                            "annotations": [],
-                        },
-                        "logprobs": None,
-                        "finish_reason": "stop",
-                    }
-                ],
-                "usage": {
-                    "prompt_tokens": 19,
-                    "completion_tokens": 10,
-                    "total_tokens": 29,
-                    "prompt_tokens_details": {"cached_tokens": 0, "audio_tokens": 0},
-                    "completion_tokens_details": {
-                        "reasoning_tokens": 0,
-                        "audio_tokens": 0,
-                        "accepted_prediction_tokens": 0,
-                        "rejected_prediction_tokens": 0,
-                    },
-                },
-                "service_tier": "default",
-            }
 
-            await self.emit_status(__event_emitter__, "info", "Complete", True)
-            return result
+            # Simulate streaming response
+            chunks = [
+                f"Headers: {__request__.headers}\n",
+                f"Cookies: {__request__.cookies}\n",
+                f"User: {__user__}\n",
+                f"Body: {body}\n",
+            ]
+
+            for chunk in chunks:
+                yield chunk
+                await self.emit_status(__event_emitter__, "info", "Streaming...", False)
+                await asyncio.sleep(0.5)  # Simulate streaming delay
+
+            await self.emit_status(__event_emitter__, "info", "Stream Complete", True)
+
+        except Exception as e:
+            error_msg = f"Error: {e}"
+            yield error_msg
+            await self.emit_status(__event_emitter__, "error", error_msg, True)
+
+    async def pipe(
+        self,
+        body: Dict[str, Any],
+        __request__: Optional[Request] = None,
+        __user__: Optional[Dict[str, Any]] = None,
+        __event_emitter__: Optional[Callable[[Dict[str, Any]], Awaitable[None]]] = None,
+        __event_call__: Optional[
+            Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]
+        ] = None,
+    ) -> Union[Dict[str, Any], StreamingResponse]:
+        """
+        Main pipe method supporting both streaming and non-streaming responses
+        """
+        try:
+            # Return a streaming response
+            return StreamingResponse(
+                self.stream_response(
+                    body=body,
+                    __request__=__request__,
+                    __user__=__user__,
+                    __event_emitter__=__event_emitter__,
+                    __event_call__=__event_call__,
+                ),
+                media_type="text/plain",
+            )
+
         except Exception as e:
             await self.emit_status(__event_emitter__, "error", str(e), True)
-            formatted_response = {
+            return {
                 "id": "error",
                 "model": "error",
                 "created": "2023-10-01T00:00:00Z",
-                # "usage": response["usage"],
-                # "object": response["object"],
                 "choices": [
                     {
                         "index": "1",
-                        # "finish_reason": choice["finish_reason"],
                         "message": {
                             "role": "assistant",
                             "content": f"Error: {e}",
                         },
-                        # "delta": {"role": "assistant", "content": ""},
                     }
                 ],
             }
-            return formatted_response
