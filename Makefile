@@ -142,7 +142,7 @@ run-pre-commit: setup-pre-commit
 clean: down clean_database ## Cleans all the local docker setup
 
 .PHONY: clean_database
-clean_database: ## Cleans all the local docker setup
+clean_database: down ## Cleans all the local docker setup
 ifneq ($(shell docker volume ls | grep "language_model_gateway"| awk '{print $$2}'),)
 	docker volume ls | grep "language_model_gateway" | awk '{print $$2}' | xargs docker volume rm
 endif

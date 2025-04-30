@@ -2,7 +2,7 @@ services:
   open-webui:
     # https://github.com/open-webui/open-webui/releases
 #    image: openwebui-local:latest
-    image: ghcr.io/open-webui/open-webui:v0.5.7
+    image: ghcr.io/open-webui/open-webui:v0.6.5
     depends_on:
       - open-webui-db
     env_file:
