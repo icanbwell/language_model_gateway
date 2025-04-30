@@ -9,9 +9,11 @@ This module defines a Pipe class that utilizes LangChain
 
 import time
 from typing import Optional, Callable, Awaitable, Any, Dict
+from typing import AsyncGenerator, Iterator
 
 from pydantic import BaseModel, Field
 from starlette.requests import Request
+from starlette.responses import StreamingResponse
 
 
 class Pipe:
@@ -67,7 +69,18 @@ class Pipe:
         __event_emitter__: Callable[[Dict[str, Any]], Awaitable[None]] | None = None,
         __event_call__: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]
         | None = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> (
+        Dict[str, Any]
+        | StreamingResponse
+        | BaseModel
+        | Iterator[Dict[str, Any] | BaseModel | str]
+        | AsyncGenerator[Dict[str, Any] | BaseModel | str, None]
+    ):
+        """
+        Called from https://github.com/open-webui/open-webui/blob/main/backend/open_webui/functions.py
+
+
+        """
         try:
             await self.emit_status(
                 __event_emitter__,
