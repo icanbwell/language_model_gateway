@@ -66,7 +66,7 @@ class MCPServerRouter:
         self.router.add_api_route(
             "/mount-sse",
             self.mount_mcp_sse,
-            methods=["POST"],
+            methods=["POST", "GET"],
             response_model=None,
             summary="Mount MCP Server-Sent Events",
             description="Mounts the MCP server as a Server-Sent Events endpoint",
