@@ -102,5 +102,6 @@ repos:
             docker-compose\.yml|
             .helm/.*|
             docker-compose-openwebui\.yml|
-            docker-compose-openwebui-auth\.yml
+            docker-compose-openwebui-auth\.yml|
+            openwebui_functions/.*
           )$
