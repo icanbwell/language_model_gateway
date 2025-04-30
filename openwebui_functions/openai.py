@@ -6,6 +6,7 @@ This module defines a Pipe class that utilizes LangChain with streaming support
 """
 
 import asyncio
+import json
 import time
 from typing import AsyncGenerator
 from typing import Optional, Callable, Awaitable, Any, Dict, Union
@@ -84,24 +85,126 @@ class Pipe:
                 raise ValueError("Request and user information must be provided.")
 
             # Simulate streaming response
+            # Generate chunks in OpenAI streaming format
             chunks = [
-                f"Headers: {__request__.headers}\n",
-                f"Cookies: {__request__.cookies}\n",
-                f"User: {__user__}\n",
-                f"Body: {body}\n",
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": "gpt-3.5-turbo",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"role": "assistant"},
+                            "finish_reason": None,
+                        }
+                    ],
+                },
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": "gpt-3.5-turbo",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"content": "Here"},
+                            "finish_reason": None,
+                        }
+                    ],
+                },
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": "gpt-3.5-turbo",
+                    "choices": [
+                        {"index": 0, "delta": {"content": " is"}, "finish_reason": None}
+                    ],
+                },
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": "gpt-3.5-turbo",
+                    "choices": [
+                        {"index": 0, "delta": {"content": " a"}, "finish_reason": None}
+                    ],
+                },
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": "gpt-3.5-turbo",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"content": " streamed"},
+                            "finish_reason": None,
+                        }
+                    ],
+                },
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": "gpt-3.5-turbo",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {
+                                "content": f", headers={__request__.headers}, cookies={__request__.cookies} {__user__=} {body=}",
+                            },
+                            "finish_reason": None,
+                        }
+                    ],
+                },
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": "gpt-3.5-turbo",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"content": " response."},
+                            "finish_reason": None,
+                        }
+                    ],
+                },
+                {
+                    "id": "chatcmpl-123",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": "gpt-3.5-turbo",
+                    "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+                },
             ]
 
             for chunk in chunks:
-                yield chunk
+                # Yield each chunk as a JSON-encoded string with a data: prefix
+                yield f"data: {json.dumps(chunk)}\n\n"
                 await self.emit_status(__event_emitter__, "info", "Streaming...", False)
                 await asyncio.sleep(0.5)  # Simulate streaming delay
 
             await self.emit_status(__event_emitter__, "info", "Stream Complete", True)
 
         except Exception as e:
-            error_msg = f"Error: {e}"
-            yield error_msg
-            await self.emit_status(__event_emitter__, "error", error_msg, True)
+            error_chunk = {
+                "id": "chatcmpl-error",
+                "object": "chat.completion.chunk",
+                "created": int(time.time()),
+                "model": "error",
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"content": f"Error: {str(e)}"},
+                        "finish_reason": "stop",
+                    }
+                ],
+            }
+            yield f"data: {json.dumps(error_chunk)}\n\n"
+            await self.emit_status(__event_emitter__, "error", str(e), True)
 
     async def pipe(
         self,
