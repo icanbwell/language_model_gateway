@@ -3,9 +3,13 @@ from typing import Optional, Dict, Any, cast
 
 import jwt
 import requests
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from jwt.algorithms import RSAAlgorithm
 from googleapiclient.discovery import build
+from language_model_gateway.gateway.oauth.google_client_secrets_loader import (
+    GoogleCredentialsManager,
+)
 
 
 class OktaGoogleDriveIntegration:
@@ -115,10 +119,16 @@ class OktaGoogleDriveIntegration:
             return None
 
         try:
+            credentials_dict = GoogleCredentialsManager.load_credentials()
             # Create credentials from the Okta token
             credentials = Credentials(  # type:ignore[no-untyped-call]
-                token=self.okta_id_token, client_id=self.google_client_id
+                token=self.okta_id_token,
+                token_uri=credentials_dict["web"]["token_uri"],
+                client_id=credentials_dict["web"]["client_id"],
+                client_secret=credentials_dict["web"]["client_secret"],
             )
+
+            credentials.refresh(Request())  # type:ignore[no-untyped-call]
 
             return credentials
         except Exception as e:
