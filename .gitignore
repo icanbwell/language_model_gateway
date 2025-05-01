@@ -142,3 +142,4 @@ dmypy.json
 /certs/*
 /letsencrypt/*
 /openwebui_functions/*.apps.googleusercontent.com.json
+/openwebui_functions/credentials.json

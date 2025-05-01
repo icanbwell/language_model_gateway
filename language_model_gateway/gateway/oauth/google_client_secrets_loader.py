@@ -60,14 +60,14 @@ class GoogleCredentialsManager:
         Raises:
             ValueError: If credentials are invalid
         """
-        required_keys = ["installed", "client_id", "client_secret", "project_id"]
+        required_keys = ["web", "client_id", "client_secret", "project_id"]
 
         # Check for top-level 'installed' key
-        if "installed" not in credentials:
+        if "web" not in credentials:
             raise ValueError("Credentials must have an 'installed' top-level key")
 
         # Check for required keys in 'installed'
-        installed = credentials["installed"]
+        installed = credentials["web"]
         for key in required_keys[1:]:
             if key not in installed:
                 raise ValueError(f"Missing required key: {key}")
