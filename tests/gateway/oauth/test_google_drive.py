@@ -128,7 +128,7 @@ class OktaGoogleDriveIntegration:
                 client_secret=credentials_dict["web"]["client_secret"],
             )
 
-            credentials.refresh(Request())  # type:ignore[no-untyped-call]
+            # credentials.refresh(Request())  # type:ignore[no-untyped-call]
 
             return credentials
         except Exception as e:
