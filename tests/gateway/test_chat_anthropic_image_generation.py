@@ -39,6 +39,7 @@ async def test_chat_anthropic_image_generation(async_client: httpx.AsyncClient) 
         n=1,
     )
 
+    assert response.data is not None
     image_url = response.data[0].url
     print(f"Image URL: {image_url}")
     assert image_url is not None
