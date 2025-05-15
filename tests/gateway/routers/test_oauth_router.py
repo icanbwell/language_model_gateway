@@ -43,7 +43,7 @@ async def test_login(async_client: httpx.AsyncClient, httpx_mock: HTTPXMock) -> 
             callback=lambda request: Response(
                 200,
                 json={
-                    "authorization_endpoint": "123",
+                    "authorization_endpoint": "https://example.com/auth",
                     "token_endpoint": "",
                     "userinfo_endpoint": "",
                 },
@@ -56,6 +56,21 @@ async def test_login(async_client: httpx.AsyncClient, httpx_mock: HTTPXMock) -> 
             redirect_uri=redirect_uri,
             well_known_config_url=well_known_config_url,
         )
+
+        print(f"auth_url: {auth_url}")
+
+        # add mock for authorization endpoint
+        httpx_mock.add_callback(
+            callback=lambda request: Response(
+                200,
+                json={
+                    "code": "123",
+                    "state": "",
+                },
+            ),
+            url=auth_url,
+        )
+
         # Test health endpoint
         response = await async_client.get(auth_url)
         assert response.status_code == 200
