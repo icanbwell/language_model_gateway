@@ -87,7 +87,7 @@ class JwtAuthenticator:
 
         # Fetch well-known configuration
         well_known_configuration: Optional[WellKnownConfiguration] = (
-            await self.well_known_configuration_reader.read_from_well_known_configuration_async(
+            await self.well_known_configuration_reader.fetch_configuration_async(
                 well_known_config_url=well_known_config_url,
             )
         )

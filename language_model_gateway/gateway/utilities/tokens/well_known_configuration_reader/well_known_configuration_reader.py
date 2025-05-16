@@ -1,75 +1,91 @@
-import logging
-from typing import Optional, Dict, Any, cast
+from typing import Dict, Any, Optional
 
 import httpx
-import requests
-from httpx import Response
+from cachetools import LRUCache
 
 from language_model_gateway.gateway.http.http_client_factory import HttpClientFactory
 from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration import (
     WellKnownConfiguration,
 )
 
-logger = logging.getLogger(__name__)
-
 
 class WellKnownConfigurationReader:
     """
-    Reads OpenID provider configuration from the well-known configuration endpoint
-
+    Well-known configuration manager
     """
 
-    def __init__(self, *, http_client_factory: HttpClientFactory) -> None:
+    # Static cache for configuration data
+    _cache: LRUCache[str, WellKnownConfiguration] = LRUCache(maxsize=100)
+
+    def __init__(
+        self,
+        *,
+        http_client_factory: HttpClientFactory,
+    ):
+        """
+        Constructor
+        """
         self.http_client_factory: HttpClientFactory = http_client_factory
 
-    cache: Dict[str, WellKnownConfiguration] = {}
-
-    async def read_from_well_known_configuration_async(
-        self, *, well_known_config_url: str
-    ) -> Optional[WellKnownConfiguration]:
+    @staticmethod
+    async def _extract_configuration_details(
+        config: Dict[str, Any],
+    ) -> WellKnownConfiguration:
         """
-        Read OpenID provider configuration from the well-known configuration endpoint
-
-        :param well_known_config_url: URL of the well-known configuration endpoint
-        :return: OpenID provider configuration
+        Extract specific fields from configuration data
+        :param config: Raw configuration object
+        :return: Extracted configuration details
         """
-        if well_known_config_url in self.cache:
-            return self.cache[well_known_config_url]
+        if not config or not isinstance(config, dict):
+            raise ValueError("Invalid configuration data")
 
-        config: Dict[str, Any] = await self._fetch_well_known_configuration_async(
-            well_known_config_url=well_known_config_url
-        )
-
-        well_known_configuration: WellKnownConfiguration = WellKnownConfiguration(
+        return WellKnownConfiguration(
             authorization_endpoint=config.get("authorization_endpoint"),
             token_endpoint=config.get("token_endpoint"),
             userinfo_endpoint=config.get("userinfo_endpoint"),
+            jwks_uri=config.get("jwks_uri"),
+            issuer=config.get("issuer"),
+            end_session_endpoint=config.get("end_session_endpoint"),
+            scopes_supported=config.get("scopes_supported", []),
+            response_types_supported=config.get("response_types_supported", []),
+            token_endpoint_auth_methods_supported=config.get(
+                "token_endpoint_auth_methods_supported", []
+            ),
+            revocation_endpoint=config.get("revocation_endpoint"),
+            introspection_endpoint=config.get("introspection_endpoint"),
         )
-        self.cache[well_known_config_url] = well_known_configuration
 
-        return well_known_configuration
-
-    async def _fetch_well_known_configuration_async(
+    async def fetch_configuration_async(
         self, *, well_known_config_url: str
-    ) -> Dict[str, Any]:
+    ) -> Optional[WellKnownConfiguration]:
         """
-        Fetch OpenID provider configuration.
-
-        Returns:
-            Dict[str, Any]: OpenID configuration
-
-        Raises:
-            ValueError: If configuration cannot be retrieved
+        Fetch configuration data from a given URL
+        :param well_known_config_url: Configuration endpoint URL
+        :return: Fetched configuration data
         """
-        assert well_known_config_url, "Well-known configuration URL is required"
-        client: httpx.AsyncClient
+        # Check cache first
+        if well_known_config_url in self._cache:
+            return self._cache[well_known_config_url]
+
         async with self.http_client_factory.create_http_client(
             base_url=well_known_config_url
         ) as client:
             try:
-                response: Response = await client.get(url=well_known_config_url)
+                response = await client.get(well_known_config_url)
                 response.raise_for_status()
-                return cast(Dict[str, Any], response.json())
-            except requests.RequestException as e:
-                logger.error(f"Failed to fetch well-known configuration: {e}")
-                raise ValueError(f"Failed to fetch well-known configuration: {e}")
+                extracted_data = await self._extract_configuration_details(
+                    response.json()
+                )
+
+                # Cache the extracted data
+                self._cache[well_known_config_url] = extracted_data
+
+                return extracted_data
+            except httpx.RequestError as exc:
+                raise RuntimeError(
+                    f"Failed to fetch configuration from {well_known_config_url}: {exc}"
+                ) from exc
+            except httpx.HTTPStatusError as exc:
+                raise RuntimeError(
+                    f"Failed to fetch configuration from {well_known_config_url}: {exc.response.text}"
+                ) from exc

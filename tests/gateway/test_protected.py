@@ -15,13 +15,21 @@ from language_model_gateway.gateway.utilities.tokens.well_known_configuration_re
 
 class MockWellKnownConfigurationReader(WellKnownConfigurationReader):
     @override
-    async def read_from_well_known_configuration_async(
+    async def fetch_configuration_async(
         self, *, well_known_config_url: str
     ) -> Optional[WellKnownConfiguration]:
         return WellKnownConfiguration(
             authorization_endpoint="https://example.com/auth",
             token_endpoint="https://example.com/token",
             userinfo_endpoint="https://example.com/userinfo",
+            jwks_uri="https://example.com/jwks",
+            issuer="https://example.com",
+            end_session_endpoint="https://example.com/logout",
+            scopes_supported=["openid", "profile", "email"],
+            response_types_supported=["code", "token"],
+            token_endpoint_auth_methods_supported=["client_secret_basic"],
+            revocation_endpoint="https://example.com/revoke",
+            introspection_endpoint="https://example.com/introspect",
         )
 
 
