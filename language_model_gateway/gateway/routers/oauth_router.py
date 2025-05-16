@@ -1,7 +1,7 @@
 import logging
 import os
 from enum import Enum
-from typing import Optional, Dict, Any, List, Sequence, Annotated
+from typing import Optional, Dict, Any, List, Sequence, Annotated, Union
 
 import requests
 from fastapi import APIRouter, Request, HTTPException
@@ -14,6 +14,9 @@ from language_model_gateway.gateway.api_container import (
 )
 from language_model_gateway.gateway.utilities.tokens.jwt_authenticator.jwt_authenticator import (
     JwtAuthenticator,
+)
+from language_model_gateway.gateway.utilities.tokens.jwt_authenticator.oauth_state_store import (
+    OAuthStateStore,
 )
 from language_model_gateway.gateway.utilities.tokens.well_known_configuration_reader.well_known_configuration_reader import (
     WellKnownConfigurationReader,
@@ -31,8 +34,8 @@ class OAuthRouter:
         self,
         *,
         prefix: str = "/auth",
-        tags: List[str | Enum] | None = None,
-        dependencies: Sequence[Depends] | None = None,
+        tags: Optional[List[Union[str, Enum]]] = None,
+        dependencies: Optional[Sequence[Depends]] = None,
         client_id: Optional[str] = None,
         client_secret: Optional[str] = None,
         well_known_config_url: Optional[str] = None,
@@ -43,18 +46,6 @@ class OAuthRouter:
     ) -> None:
         """
         Initialize OAuth router with configuration
-
-        Args:
-            prefix (str, optional): URL prefix for routes. Defaults to "/auth".
-            tags (list, optional): Route tags for documentation
-            dependencies (list, optional): Global route dependencies
-            client_id (str, optional): OAuth client ID
-            client_secret (str, optional): OAuth client secret
-            well_known_config_url (str, optional): Provider's well-known configuration URL
-            jwt_secret (str, optional): Secret for JWT token signing
-            redirect_uri (str, optional): OAuth callback redirect URI
-            cookie_name (str, optional): Name of the JWT cookie
-            cookie_max_age (int, optional): Cookie max age in seconds
         """
         # Configuration parameters
         self.client_id = client_id or os.getenv("OAUTH_CLIENT_ID", "")
@@ -74,6 +65,9 @@ class OAuthRouter:
         self.dependencies = dependencies or []
         self.cookie_name = cookie_name
         self.cookie_max_age = cookie_max_age
+
+        # State management
+        self.state_store = OAuthStateStore()
 
         # Initialize router
         self.router = APIRouter(
@@ -120,24 +114,25 @@ class OAuthRouter:
         jwt_authenticator: Annotated[JwtAuthenticator, Depends(get_jwt_authenticator)],
     ) -> RedirectResponse:
         """
-        Initiate OAuth login process.
-
-        Returns:
-            RedirectResponse: Redirect to OAuth provider
+        Initiate OAuth login process with CSRF state protection
         """
         assert jwt_authenticator
         assert self.client_id
         assert self.redirect_uri
         assert self.well_known_config_url
 
+        # Generate state for CSRF protection
+        state = self.state_store.create_state()
+
         auth_url = await jwt_authenticator.get_login_url(
             client_id=self.client_id,
             redirect_uri=self.redirect_uri,
             well_known_config_url=self.well_known_config_url,
+            state=state,  # Pass state for CSRF protection
         )
-        logger.info(f"Redirecting to OAuth provider: {auth_url}")
 
-        return RedirectResponse(url=auth_url, status_code=401)
+        logger.info(f"Redirecting to OAuth provider: {auth_url}")
+        return RedirectResponse(url=auth_url, status_code=302)
 
     async def callback(
         self,
@@ -149,24 +144,22 @@ class OAuthRouter:
         ],
     ) -> RedirectResponse:
         """
-        Handle OAuth callback and set JWT cookie.
-
-        Args:
-            request (Request): Incoming request
-            code (str): Authorization code from OAuth provider
-            state (str): CSRF state parameter
-            well_known_configuration_reader (WellKnownConfigurationReader): Well-known configuration reader instance
-
-        Returns:
-            RedirectResponse: Redirect after authentication
+        Handle OAuth callback and set JWT cookie with enhanced security
         """
         assert self.well_known_config_url
         assert well_known_configuration_reader
+
+        # Validate CSRF state
+        if not self.state_store.validate_state(state):
+            logger.error("Invalid OAuth state - potential CSRF attempt")
+            raise HTTPException(status_code=400, detail="Invalid state parameter")
+
         try:
             well_known_configuration = await well_known_configuration_reader.read_from_well_known_configuration_async(
                 well_known_config_url=self.well_known_config_url,
             )
             assert well_known_configuration
+            assert well_known_configuration.token_endpoint
 
             # Exchange code for tokens
             token_data = {
@@ -177,32 +170,17 @@ class OAuthRouter:
                 "redirect_uri": self.redirect_uri,
             }
 
-            assert well_known_configuration.token_endpoint
-
             token_response = requests.post(
                 well_known_configuration.token_endpoint, data=token_data
             )
             token_response.raise_for_status()
             tokens = token_response.json()
 
-            # Get access token and ID token
+            # Get access token
             access_token = tokens.get("access_token")
+            assert access_token, "No access token received"
 
-            assert access_token
-            # assert well_known_configuration.userinfo_endpoint
-            #
-            # # Fetch user info
-            # headers = {"Authorization": f"Bearer {access_token}"}
-            # user_response = requests.get(
-            #     well_known_configuration.userinfo_endpoint, headers=headers
-            # )
-            # user_response.raise_for_status()
-            # user_info = user_response.json()
-            #
-            # # Create JWT token
-            # jwt_token = self.create_jwt_token(user_info)
-
-            # Prepare response with JWT cookie
+            # Prepare response with secure cookie
             response = RedirectResponse(url="/")
             response.set_cookie(
                 key=self.cookie_name,
@@ -219,13 +197,13 @@ class OAuthRouter:
         except requests.RequestException as e:
             logger.error(f"OAuth callback error: {e}")
             raise HTTPException(status_code=400, detail=f"OAuth error: {str(e)}")
+        except AssertionError as e:
+            logger.error(f"Token validation error: {e}")
+            raise HTTPException(status_code=400, detail="Invalid token response")
 
     async def logout(self, request: Request) -> RedirectResponse:
         """
-        Logout user by clearing authentication cookie.
-
-        Returns:
-            RedirectResponse: Redirect to login page
+        Logout user by clearing authentication cookie
         """
         response = RedirectResponse(url="/login")
         response.delete_cookie(self.cookie_name)
@@ -236,9 +214,6 @@ class OAuthRouter:
     def get_router(self) -> APIRouter:
         """
         Get the configured router
-
-        Returns:
-            APIRouter: Configured FastAPI router
         """
         return self.router
 
@@ -249,16 +224,10 @@ class OAuthRouter:
         jwt_authenticator: JwtAuthenticator,
     ) -> Optional[Dict[str, Any]]:
         """
-        Extract and validate user from JWT token.
-
-        Args:
-            request (Request): Incoming HTTP request
-            jwt_authenticator (JwtAuthenticator): JWT authenticator instance
-
-        Returns:
-            Optional[Dict[str, Any]]: User information or None
+        Extract and validate user from JWT token
         """
         assert self.jwt_secret
+
         # Check cookie
         token = request.cookies.get(self.cookie_name)
 
@@ -278,16 +247,13 @@ class OAuthRouter:
         )
 
 
-# Example usage in a FastAPI application
 def create_oauth_router() -> OAuthRouter:
     """
     Create an OAuth router with default configuration
-
-    Returns:
-        OAuthRouter: Configured OAuth router
     """
     auth_well_known_configuration_uri = os.getenv("AUTH_CONFIGURATION_URI")
-    assert auth_well_known_configuration_uri
+    assert auth_well_known_configuration_uri, "AUTH_CONFIGURATION_URI must be set"
+
     return OAuthRouter(
         prefix="/auth",
         well_known_config_url=auth_well_known_configuration_uri,
