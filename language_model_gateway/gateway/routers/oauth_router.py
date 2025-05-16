@@ -49,6 +49,7 @@ class OAuthRouter:
         """
         # Configuration parameters
         self.client_id = client_id or os.getenv("OAUTH_CLIENT_ID", "")
+        assert self.client_id is not None
         self.client_secret = client_secret or os.getenv("OAUTH_CLIENT_SECRET", "")
         self.well_known_config_url = well_known_config_url or os.getenv(
             "OAUTH_WELL_KNOWN_URL", ""
