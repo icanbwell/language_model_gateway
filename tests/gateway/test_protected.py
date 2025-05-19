@@ -1,6 +1,8 @@
+import re
 from typing import override, Optional
 
 import httpx
+from pytest_httpx import HTTPXMock
 
 from language_model_gateway.container.simple_container import SimpleContainer
 from language_model_gateway.gateway.api_container import get_container_async
@@ -33,19 +35,19 @@ class MockWellKnownConfigurationReader(WellKnownConfigurationReader):
         )
 
 
-async def test_protected(async_client: httpx.AsyncClient) -> None:
+async def test_protected(
+    async_client: httpx.AsyncClient, httpx_mock: HTTPXMock
+) -> None:
+    # Mock the specific URL
+    # Prepare the full OAuth URL
+    # base_url = "https://example.com/auth"
+    # client_id = (
+    #     "35389918383-nq3htpm1keas26nce75kfp04nl7vtf64.apps.googleusercontent.com"
+    # )
+    # redirect_uri = "http%3A%2F%2Flocalhost%3A5050%2Foauth2%2Fcallback"
 
-    result = await async_client.get("/health")
-    assert result.status_code == 200
+    base_url_pattern = re.compile(r".*example.*")
 
-    # call /protected endpoint
-    result = await async_client.get("/protected")
-    print(result)
-    assert result.status_code == 401
-    redirect_location = result.headers["location"]
-    assert redirect_location == "/auth/login"
-
-    # call the /auth/callback endpoint
     test_container: SimpleContainer = await get_container_async()
     test_container.register(
         WellKnownConfigurationReader,
@@ -54,8 +56,35 @@ async def test_protected(async_client: httpx.AsyncClient) -> None:
         ),
     )
 
-    result = await async_client.get(redirect_location)
-    print(result)
+    result = await async_client.get("/health")
+    assert result.status_code == 200
+
+    # Call /protected endpoint
+    result = await async_client.get("/protected")
     assert result.status_code == 401
     redirect_location = result.headers["location"]
     assert redirect_location == "/auth/login"
+
+    # Call the /auth/callback endpoint
+    result = await async_client.get(redirect_location)
+    assert result.status_code == 302
+    redirect_location = result.headers["location"]
+    print(f"redirect_location: {redirect_location}")
+
+    # Add mock response with the precise URL matching
+    httpx_mock.add_response(
+        # allow any url that starts with the base_url
+        url=base_url_pattern,
+        method="GET",
+        json={
+            "code": "123",
+        },
+        status_code=200,
+    )
+
+    async with HttpClientFactory().create_http_client(
+        base_url=redirect_location
+    ) as client:
+        response = await client.get(redirect_location)
+        assert response.status_code == 200
+        assert result.json() == {"message": "Mocked auth response"}
