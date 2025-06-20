@@ -141,3 +141,5 @@ dmypy.json
 /image_generation/*.png
 /certs/*
 /letsencrypt/*
+/openwebui_functions/*.apps.googleusercontent.com.json
+/openwebui_functions/credentials.json
