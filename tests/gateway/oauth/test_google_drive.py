@@ -3,7 +3,6 @@ from typing import Optional, Dict, Any, cast
 
 import jwt
 import requests
-from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from jwt.algorithms import RSAAlgorithm
 from googleapiclient.discovery import build

@@ -7,11 +7,11 @@ import logging
 
 class OktaTokenExchanger:
     def __init__(
-            self,
-            okta_domain: str,
-            client_id: str,
-            client_secret: str,
-            scopes: Optional[list[str]] = None
+        self,
+        okta_domain: str,
+        client_id: str,
+        client_secret: str,
+        scopes: Optional[list[str]] = None,
     ):
         """
         Initialize Okta Token Exchanger.
@@ -22,17 +22,12 @@ class OktaTokenExchanger:
             scopes (Optional[list[str]]): OAuth scopes to request
         """
         # Ensure domain is properly formatted
-        self.okta_domain = okta_domain.rstrip('/')
+        self.okta_domain = okta_domain.rstrip("/")
         self.client_id = client_id
         self.client_secret = client_secret
 
         # Default scopes with offline_access for refresh token
-        self.scopes = scopes or [
-            'openid',
-            'profile',
-            'email',
-            'offline_access'
-        ]
+        self.scopes = scopes or ["openid", "profile", "email", "offline_access"]
 
         # Configure logging
         logging.basicConfig(level=logging.INFO)
@@ -55,8 +50,8 @@ class OktaTokenExchanger:
                 options={
                     "verify_signature": False,
                     "verify_aud": False,
-                    "verify_iat": False
-                }
+                    "verify_iat": False,
+                },
             )
 
             # Additional validation checks
@@ -65,7 +60,7 @@ class OktaTokenExchanger:
                 return None
 
             # Check for required claims
-            required_claims = ['sub', 'iss', 'aud']
+            required_claims = ["sub", "iss", "aud"]
             for claim in required_claims:
                 if claim not in decoded:
                     self.logger.error(f"Missing required claim: {claim}")
@@ -97,18 +92,18 @@ class OktaTokenExchanger:
             return None
 
         # Construct token exchange endpoint
-        token_endpoint = f'{self.okta_domain}/oauth2/v1/token'
+        token_endpoint = f"{self.okta_domain}/oauth2/v1/token"
 
         # Prepare token exchange payload
         payload = {
             # 'grant_type': 'urn:okta:params:oauth:grant-type:token-exchange',
-            'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
-            'subject_token': id_token,
-            'subject_token_type': 'urn:ietf:params:oauth:token-type:id_token',
-            'requested_token_type': 'urn:ietf:params:oauth:token-type:refresh_token',
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
-            'scope': ' '.join(self.scopes)
+            "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+            "subject_token": id_token,
+            "subject_token_type": "urn:ietf:params:oauth:token-type:id_token",
+            "requested_token_type": "urn:ietf:params:oauth:token-type:refresh_token",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "scope": " ".join(self.scopes),
         }
 
         try:
@@ -117,15 +112,17 @@ class OktaTokenExchanger:
                 token_endpoint,
                 data=payload,
                 headers={
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    "Accept": "application/json",
+                    "Content-Type": "application/x-www-form-urlencoded",
                 },
-                timeout=10  # Add timeout to prevent hanging
+                timeout=10,  # Add timeout to prevent hanging
             )
 
             # Detailed error logging
             if response.status_code != 200:
-                self.logger.error(f"Token exchange failed with status {response.status_code}")
+                self.logger.error(
+                    f"Token exchange failed with status {response.status_code}"
+                )
                 self.logger.error(f"Response body: {response.text}")
                 return None
 
@@ -133,16 +130,16 @@ class OktaTokenExchanger:
             token_response = response.json()
 
             # Validate token response
-            required_tokens = ['access_token', 'refresh_token']
+            required_tokens = ["access_token", "refresh_token"]
             for token_type in required_tokens:
                 if token_type not in token_response:
                     self.logger.error(f"Missing {token_type} in response")
                     return None
 
             return {
-                'access_token': token_response['access_token'],
-                'refresh_token': token_response['refresh_token'],
-                'id_token': token_response.get('id_token')
+                "access_token": token_response["access_token"],
+                "refresh_token": token_response["refresh_token"],
+                "id_token": token_response.get("id_token"),
             }
 
         except requests.RequestException as e:
@@ -156,24 +153,22 @@ class OktaTokenExchanger:
 def test_okta_token_refresh():
     # Configuration validation with comprehensive checks
     try:
-        OKTA_DOMAIN = os.environ.get('OKTA_DOMAIN')
-        CLIENT_ID = os.environ.get('OKTA_CLIENT_ID')
-        CLIENT_SECRET = os.environ.get('OKTA_CLIENT_SECRET')
-        ID_TOKEN = os.environ.get('OKTA_ID_TOKEN')
+        OKTA_DOMAIN = os.environ.get("OKTA_DOMAIN")
+        CLIENT_ID = os.environ.get("OKTA_CLIENT_ID")
+        CLIENT_SECRET = os.environ.get("OKTA_CLIENT_SECRET")
+        ID_TOKEN = os.environ.get("OKTA_ID_TOKEN")
 
         # Comprehensive input validation
         if not all([OKTA_DOMAIN, CLIENT_ID, ID_TOKEN]):
             raise ValueError("Missing required environment variables")
 
         # Validate domain format
-        if not OKTA_DOMAIN.startswith('https://'):
-            OKTA_DOMAIN = f'https://{OKTA_DOMAIN}'
+        if not OKTA_DOMAIN.startswith("https://"):
+            OKTA_DOMAIN = f"https://{OKTA_DOMAIN}"
 
         # Initialize token exchanger
         token_exchanger = OktaTokenExchanger(
-            okta_domain=OKTA_DOMAIN,
-            client_id=CLIENT_ID,
-            client_secret=CLIENT_SECRET
+            okta_domain=OKTA_DOMAIN, client_id=CLIENT_ID, client_secret=CLIENT_SECRET
         )
 
         # Attempt token exchange
@@ -181,12 +176,13 @@ def test_okta_token_refresh():
 
         if new_tokens:
             print("Token Exchange Successful")
-            print("Access Token Available:", bool(new_tokens.get('access_token')))
-            print("Refresh Token Available:", bool(new_tokens.get('refresh_token')))
+            print("Access Token Available:", bool(new_tokens.get("access_token")))
+            print("Refresh Token Available:", bool(new_tokens.get("refresh_token")))
         else:
             print("Token exchange failed")
 
     except Exception as e:
         print(f"Critical error in token exchange: {e}")
         import traceback
+
         traceback.print_exc()

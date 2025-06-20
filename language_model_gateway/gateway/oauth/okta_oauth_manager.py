@@ -1,16 +1,12 @@
 import os
 import requests
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from urllib.parse import urlencode
 
 
 class OktaOAuthManager:
     def __init__(
-            self,
-            okta_domain: str,
-            client_id: str,
-            client_secret: str,
-            redirect_uri: str
+        self, okta_domain: str, client_id: str, client_secret: str, redirect_uri: str
     ):
         """
         Initialize Okta OAuth Manager.
@@ -37,15 +33,15 @@ class OktaOAuthManager:
             str: Authorization URL
         """
         params = {
-            'client_id': self.client_id,
-            'response_type': 'code',
-            'scope': ' '.join(scopes),
-            'redirect_uri': self.redirect_uri,
-            'state': os.urandom(16).hex()  # CSRF protection
+            "client_id": self.client_id,
+            "response_type": "code",
+            "scope": " ".join(scopes),
+            "redirect_uri": self.redirect_uri,
+            "state": os.urandom(16).hex(),  # CSRF protection
         }
 
-        authorization_endpoint = f'{self.okta_domain}/oauth2/v1/authorize'
-        return f'{authorization_endpoint}?{urlencode(params)}'
+        authorization_endpoint = f"{self.okta_domain}/oauth2/v1/authorize"
+        return f"{authorization_endpoint}?{urlencode(params)}"
 
     def exchange_code_for_tokens(self, authorization_code: str) -> Dict[str, Any]:
         """
@@ -57,14 +53,14 @@ class OktaOAuthManager:
         Returns:
             Dict[str, Any]: Token response
         """
-        token_endpoint = f'{self.okta_domain}/oauth2/v1/token'
+        token_endpoint = f"{self.okta_domain}/oauth2/v1/token"
 
         payload = {
-            'grant_type': 'authorization_code',
-            'code': authorization_code,
-            'redirect_uri': self.redirect_uri,
-            'client_id': self.client_id,
-            'client_secret': self.client_secret
+            "grant_type": "authorization_code",
+            "code": authorization_code,
+            "redirect_uri": self.redirect_uri,
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
         }
 
         response = requests.post(token_endpoint, data=payload)
@@ -84,13 +80,13 @@ class OktaOAuthManager:
         Returns:
             Dict[str, Any]: New token response
         """
-        token_endpoint = f'{self.okta_domain}/oauth2/v1/token'
+        token_endpoint = f"{self.okta_domain}/oauth2/v1/token"
 
         payload = {
-            'grant_type': 'refresh_token',
-            'refresh_token': refresh_token,
-            'client_id': self.client_id,
-            'client_secret': self.client_secret
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
         }
 
         response = requests.post(token_endpoint, data=payload)
@@ -103,17 +99,17 @@ class OktaOAuthManager:
 
 def main():
     # Configuration (typically from environment or secure config)
-    OKTA_DOMAIN = os.getenv('OKTA_DOMAIN')
-    CLIENT_ID = os.getenv('OKTA_CLIENT_ID')
-    CLIENT_SECRET = os.getenv('OKTA_CLIENT_SECRET')
-    REDIRECT_URI = os.getenv('OKTA_REDIRECT_URI')
+    OKTA_DOMAIN = os.getenv("OKTA_DOMAIN")
+    CLIENT_ID = os.getenv("OKTA_CLIENT_ID")
+    CLIENT_SECRET = os.getenv("OKTA_CLIENT_SECRET")
+    REDIRECT_URI = os.getenv("OKTA_REDIRECT_URI")
 
     # Recommended scopes for Google Drive access
     SCOPES = [
-        'openid',  # Required for ID token
-        'profile',  # User profile information
-        'email',  # Email access
-        'offline_access'  # Critical for obtaining refresh token
+        "openid",  # Required for ID token
+        "profile",  # User profile information
+        "email",  # Email access
+        "offline_access",  # Critical for obtaining refresh token
     ]
 
     # Initialize OAuth Manager
@@ -121,7 +117,7 @@ def main():
         okta_domain=OKTA_DOMAIN,
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
-        redirect_uri=REDIRECT_URI
+        redirect_uri=REDIRECT_URI,
     )
 
     # Step 1: Generate Authorization URL (to be used in browser/redirect)
@@ -136,9 +132,9 @@ def main():
     token_response = okta_oauth.exchange_code_for_tokens(authorization_code)
 
     # Extract and store tokens securely
-    id_token = token_response.get('id_token')
-    access_token = token_response.get('access_token')
-    refresh_token = token_response.get('refresh_token')
+    id_token = token_response.get("id_token")
+    access_token = token_response.get("access_token")
+    refresh_token = token_response.get("refresh_token")
 
     # Optional: Demonstrate token refresh
     if refresh_token:
