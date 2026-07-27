@@ -16,6 +16,22 @@ Treat these as hard constraints, not suggestions. Code that violates tenant isol
 
 ---
 
+## Design-Time Quality Kit & Knowledge Substrate
+
+The worst failures happen at **design time**, before code review can catch them. b.well maintains a tool-neutral **knowledge substrate** — the single source of truth for rules, patterns, and gradeable review rubrics — and a design-time kit that uses it. Reach for these instead of re-deriving (or reinventing) an approach:
+
+- **Authoring a design?** Use the **`tech-design`** skill — it walks you through the rubric so the design passes EA review the first time.
+- **Reviewing a design?** Use **`/tech-design-review`** — it grades a TDD/FDR against the rubric and returns concrete, cited gaps.
+- **Rubrics** (`rubrics/`) — what "good" means, gradeably: `tech-design-rubric.md`, `fhir-feasibility-rubric.md` (conformance + IG conformance + resource-explosion feasibility), `api-design-rubric.md`.
+- **Patterns** (`patterns/`) — named, blessed shapes to appeal to by name, not reinvent: `orchestrated-long-running-work`, `temporal-coalescing`, `event-key-and-partition-design`.
+- **Decision guides** (`decision-guides/`) — e.g. `datastore-selection.md` (including *do not put run/FSM state on a FHIR `Task`*).
+- **Standards** (`standards/`) — canonical rules, e.g. `events.md` (Kafka/event conventions; supersedes the inline `patient.updated`-style examples elsewhere in this file).
+- **Reference architectures** (`reference-architectures/`) — annotated real exemplars (the DEQM orchestrator; a good API/SDK).
+
+Overview + the stable-anchor citation convention: `docs/knowledge-substrate.md`. Cite substrate content by anchor (e.g. `standards/events.md#std-events-partition-key`), never by line number.
+
+---
+
 ## Architecture Non-Negotiables
 
 ### Event-Driven First
@@ -271,7 +287,7 @@ When a user tells you an action is blocked or explains a constraint, internalize
 Find and use the repo's canonical build, test, and lint commands. Check the Makefile, package.json scripts, build.gradle, or Pipfile. If the commands are unclear, say so and point to where you looked. Do not invent commands.
 
 ### Don't Introduce Dependencies Casually
-Check `policies/approved-tech.yaml` before adding any new dependency. If the dependency is not listed, flag it for review. Do not assume a library is approved because it is popular.
+Check `approved-tech.yaml` before adding any new dependency. If the dependency is not listed, flag it for review. Do not assume a library is approved because it is popular.
 
 ### Reference Governing Artifacts
 If your change touches a public API, event contract, or cross-service behavior, reference the governing document (Tech Design Doc, FDR, ADR, AsyncAPI spec) in the PR description or commit message. If no governing artifact exists and one should, say so.
