@@ -128,7 +128,7 @@ categories:
       - name: "PostgreSQL"
         type: "relational"
         versions: ["15.x", "16.x"]
-        notes: "Requires Tech Design Review for new services. Tenant isolation mandatory. Prefer MongoDB for document stores."
+        notes: "First-class approved relational store, incl. operational run/FSM state with JPA + Flyway migrations (the clinical-reasoning-orchestrator uses PostgreSQL). Choose relational (PostgreSQL) vs document (MongoDB) by workload, not by default — see decision-guides/datastore-selection.md. A new-service datastore still requires a Tech Design Review; tenant isolation mandatory."
 
       - name: "Elasticsearch"
         type: "search"
@@ -143,7 +143,7 @@ categories:
       - name: "ClickHouse"
         type: "analytics"
         versions: ["23.x", "24.x"]
-        notes: "OLAP database for analytics and time-series data"
+        notes: "OLAP database for analytics and time-series data. Also an active EA-approved track (EA-2126) as a hybrid FHIR storage backend for resources that exceed MongoDB's 16MB BSON limit (e.g. Group at 1M+ members) — see reference-architectures/fhir-server-group-scaling.md. That is a reviewed, in-flight direction for the specific fhir-server use case, not a blanket approval to use ClickHouse as a general operational datastore; a new use case still requires a Tech Design Review."
 
       - name: "Databricks"
         type: "analytics-platform"
@@ -163,6 +163,14 @@ categories:
           - "CloudEvents format mandatory"
           - "Idempotent consumers required"
           - "Partition keys must ensure entity ordering"
+
+      - name: "Kafka Streams"
+        versions: ["3.x"]
+        notes: "Stateful stream processing for Kafka consumers. Use for deduplication, windowing, aggregation, joins. RocksDB state store provides fault-tolerant state via changelog topics. Do NOT use external caches/databases (Caffeine, Redis, MongoDB, PostgreSQL) for Kafka consumer state."
+        patterns:
+          - "State co-located with Kafka partition assignment"
+          - "RocksDB state store backed by changelog topics"
+          - "Tenant isolation in state keys (tenantId prefix)"
 
   # ============================================================================
   # Caching
