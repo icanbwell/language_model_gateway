@@ -78,7 +78,11 @@ jobs:
       # Publish all test results in the GitHub UI
       - name: Surface failing tests
         if: always()
-        uses: pmeier/pytest-results-action@main # https://github.com/pmeier/pytest-results-action
+        # Pinned to the v0.9.0 release commit SHA (not the floating @main branch ref) so a
+        # compromised or force-pushed upstream branch can't silently inject code into this
+        # workflow's runner. Bump the SHA (and this comment) intentionally when upgrading.
+        # https://github.com/pmeier/pytest-results-action
+        uses: pmeier/pytest-results-action@fdc7f18d9934e38aca411ca9557e6577bd25ca9c # v0.9.0
         with:
           # A list of JUnit XML files, directories containing the former, and wildcard
           # patterns to process.
