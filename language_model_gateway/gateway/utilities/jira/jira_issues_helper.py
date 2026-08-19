@@ -361,6 +361,13 @@ class JiraIssueHelper:
             raise ValueError("Output file path is invalid")
 
         try:
+            # Security note (Aikido path-traversal finding, BAI-441): `output_file` is not
+            # currently reachable from any request/LLM-tool input — this method is only
+            # invoked from tests with a hardcoded path, and it is not wired into any
+            # LangChain tool's args_schema exposed to the model. If a caller ever passes
+            # this a value derived from a request, config file, or LLM tool call, add
+            # path-containment validation (resolve to an absolute path and confirm it
+            # stays inside an expected base directory) before opening it for write.
             with open(output_file, "w") as f:
                 f.write(self.export_results_to_csv(issue_counts=issue_counts))
             self.logger.info(f"Results exported to {output_file}")
