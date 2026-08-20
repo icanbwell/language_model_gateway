@@ -32,13 +32,16 @@ RUN ls -halt /app/backend/data/cache/embedding/models && \
     ls -halt /app/backend/data/cache/whisper/models && \
     ls -halt /app/backend/data/cache/tiktoken
 
-# Security fix (Aikido "container runs as root", BAI-441): this is a long-running service
-# image, not dev tooling invoked with a bind mount, so a plain non-root USER (without the
-# UID/GID host-alignment build-args used in pre-commit.Dockerfile) is sufficient here — see
-# the "non-root-user-breaks-bind-mounted-dev-tooling-images" caveat for why that distinction
-# matters. Give appuser ownership of the app/cache directories written above before
-# dropping out of root.
-RUN groupadd -r appgroup && useradd -r -g appgroup -d /app appuser \
-    && chown -R appuser:appgroup /app
+# Security fix (Aikido "container runs as root", BAI-441): unlike pre-commit.Dockerfile,
+# this image IS also used with real bind mounts in local dev (see
+# docker-compose-openwebui.yml: `~/.aws:/home/appuser/.aws:ro` for S3 credential discovery
+# and `./caches/open-webui-models:/app/backend/data/cache` for the model cache), so the same
+# UID/GID host-alignment this repo already uses for pre-commit.Dockerfile applies here too --
+# a fixed in-image UID wouldn't match the host caller's UID for either bind-mounted path.
+# Passed as `--build-arg UID="$(id -u)" --build-arg GID="$(id -g)"` by docker-compose-openwebui.yml.
+ARG UID=1000
+ARG GID=1000
+ENV HOME=/home/appuser
+RUN mkdir -p "${HOME}" && chown -R "${UID}:${GID}" "${HOME}" /app
 
-USER appuser
+USER ${UID}:${GID}
