@@ -59,14 +59,14 @@ up-integration: fix-script-permissions ## starts docker containers
 
 .PHONY: up-open-webui
 up-open-webui: fix-script-permissions clean-database ## starts docker containers
-	docker compose --progress=plain -f docker-compose-openwebui.yml up --build -d
+	UID=$$(id -u) GID=$$(id -g) docker compose --progress=plain -f docker-compose-openwebui.yml up --build -d
 	sh scripts/wait-for-healthy.sh language-model-gateway-open-webui-1 || exit 1
 	@echo ""
 	@echo OpenWebUI: http://localhost:3050
 
 .PHONY: up-open-webui-ssl
 up-open-webui-ssl: fix-script-permissions clean-database ## starts docker containers
-	docker compose --progress=plain -f docker-compose-openwebui.yml -f docker-compose-openwebui-ssl.yml up --build -d
+	UID=$$(id -u) GID=$$(id -g) docker compose --progress=plain -f docker-compose-openwebui.yml -f docker-compose-openwebui-ssl.yml up --build -d
 	sh scripts/wait-for-healthy.sh language-model-gateway-open-webui-1 || exit 1
 	@echo ""
 	@echo OpenWebUI: http://localhost:3050 https://open-webui.localhost
@@ -82,7 +82,7 @@ up-open-webui-auth: create-docker-network fix-script-permissions create-certs ch
 	sh scripts/wait-for-healthy.sh language-model-gateway-keycloak-1 150 2 || exit 1 && \
 	sh scripts/wait-for-healthy.sh language-model-gateway-mongo-1 || exit 1 && \
 	sh scripts/wait-for-healthy.sh language-model-gateway-mcp_server_gateway-1 || exit 1
-	docker compose \
+	UID=$$(id -u) GID=$$(id -g) docker compose \
 	-f docker-compose-keycloak.yml \
 	-f docker-compose-mongo.yml \
 	-f docker-compose.yml \

@@ -12,6 +12,12 @@ services:
       # use a dockerfile to preinstall the sentence-transformers package and download the all-MiniLM-L6-v2 model
       dockerfile: ./openwebui-config/functions/open-webui.Dockerfile
       context: .
+      # Host UID/GID, so the non-root user this image runs as (see
+      # open-webui.Dockerfile) matches the caller's ownership of the two bind mounts
+      # below, instead of a fixed in-image UID that doesn't exist on the host.
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
     env_file:
       - .env
     ports:
@@ -120,8 +126,10 @@ services:
         "content": "I want to connect to my health records"
       }]'
     volumes:
-      # Mount AWS credentials if using S3 storage
-      - ~/.aws/:/root/.aws:ro
+      # Mount AWS credentials if using S3 storage. Target is /home/appuser (this
+      # image's non-root HOME, see open-webui.Dockerfile), not /root -- the container
+      # no longer runs as root.
+      - ~/.aws/:/home/appuser/.aws:ro
       # Mount local model cache to container's embedding model cache
       - ./caches/open-webui-models:/app/backend/data/cache
     networks:

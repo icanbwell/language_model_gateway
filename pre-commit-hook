@@ -10,4 +10,4 @@ fi
 
 GIT_PROJECT_ROOT=$(git rev-parse --show-toplevel)
 cd "$GIT_PROJECT_ROOT"
-docker build -f ./pre-commit.Dockerfile -t pre-commit-language_model_gateway . && docker run --rm --name pre-commit-run-language_model_gateway -e PRE_COMMIT_ALL_FILES=$PRE_COMMIT_ALL_FILES -v pre-commit:/.cache/pre-commit:delegated -v $(pwd)/:/sourcecode pre-commit-language_model_gateway
+docker build -f ./pre-commit.Dockerfile -t pre-commit-language_model_gateway --build-arg UID="$(id -u)" --build-arg GID="$(id -g)" . && docker run --rm --name pre-commit-run-language_model_gateway -e PRE_COMMIT_ALL_FILES=$PRE_COMMIT_ALL_FILES -v pre-commit:/.cache/pre-commit:delegated -v $(pwd)/:/sourcecode pre-commit-language_model_gateway

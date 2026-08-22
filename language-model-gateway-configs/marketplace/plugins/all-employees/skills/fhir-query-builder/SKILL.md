@@ -318,7 +318,7 @@ When requested, provide a ready-to-use cURL command:
 curl -X GET \
   'https://fhir.dev.bwell.zone/4_0_0/Patient?_count=10' \
   -H 'Content-Type: application/fhir+json' \
-  -H 'Authorization: Bearer YOUR_TOKEN_HERE'
+  -H 'Authorization: Bearer <YOUR_API_TOKEN>'
 ```
 
 ### Postman/REST Client Format
@@ -340,7 +340,7 @@ params = {
 }
 headers = {
     "Content-Type": "application/fhir+json",
-    "Authorization": "Bearer YOUR_TOKEN_HERE"
+    "Authorization": "Bearer <YOUR_API_TOKEN>"
 }
 
 response = requests.get(url, params=params, headers=headers)
