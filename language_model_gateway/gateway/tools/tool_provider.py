@@ -72,6 +72,8 @@ from language_model_gateway.gateway.tools.network_topology_diagram_tool import (
     NetworkTopologyGeneratorTool,
 )
 from language_model_gateway.gateway.tools.pdf_extraction_tool import PDFExtractionTool
+
+from language_model_gateway.gateway.tools.person_creator_tool import PersonCreatorTool
 from language_model_gateway.gateway.tools.provider_search_tool import ProviderSearchTool
 from language_model_gateway.gateway.tools.scraping_bee_web_scraper_tool import (
     ScrapingBeeWebScraperTool,
@@ -193,6 +195,7 @@ class ToolProvider:
             "databricks_query_validator": DatabricksSQLTool(
                 databricks_helper=databricks_helper
             ),
+            "person_creator": PersonCreatorTool(),
             "fhir_graphql_schema_provider": GraphqlSchemaProviderTool(),
             "jira_issue_retriever": JiraIssueRetriever(
                 jira_issues_helper=jira_issues_helper
