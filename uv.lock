@@ -2426,7 +2426,7 @@ wheels = [
 
 [[package]]
 name = "language-model-common"
-version = "2.0.87"
+version = "2.0.99"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "authlib" },
@@ -2455,9 +2455,9 @@ dependencies = [
     { name = "simple-container" },
     { name = "tiktoken" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/3b/7a285c4539f5862c9971d5d20af4df45e47d3ee8ab33fb81583b44e77621/language_model_common-2.0.87.tar.gz", hash = "sha256:d8ca7cbff35662cfd6c1bfe1073b92f35d3d646d7ba316d801b0afe046772b7f", size = 181942, upload-time = "2026-07-03T04:16:50.028Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/a5/13b3a3d23683b4bae8f6153f02a17e989394aef586da284f27392e59b4e7/language_model_common-2.0.99.tar.gz", hash = "sha256:9d68dac2a1ed4531cdbc4d5bebae87a048cee50e38ab82e0f95f96d378d058e0", size = 195881, upload-time = "2026-09-10T18:27:12.415Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/51/c524cdea031b7d77bee32c2fd420f2803d586919fefd058a1b5c2f78a20b/language_model_common-2.0.87-py3-none-any.whl", hash = "sha256:25321c547b337eba8110eed0b1208069eca3f825b9eb5007d4fecd40eea59358", size = 249785, upload-time = "2026-07-03T04:16:48.469Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/5f/41aefa48b41145d3961269421a131766047abd1d4e4906edd53dfbabb0b3/language_model_common-2.0.99-py3-none-any.whl", hash = "sha256:7be053845ef8534040820820fbc605fcd899146a5fbe11a757cdbdab5555fb6e", size = 263980, upload-time = "2026-09-10T18:27:10.817Z" },
 ]
 
 [[package]]
@@ -2608,7 +2608,7 @@ requires-dist = [
     { name = "langgraph-checkpoint-mongodb", specifier = ">=0.2.1" },
     { name = "langgraph-store-mongodb", specifier = ">=0.1.0" },
     { name = "langmem", specifier = ">=0.0.30" },
-    { name = "language-model-common", specifier = ">=2.0.87" },
+    { name = "language-model-common", specifier = ">=2.0.99" },
     { name = "markdownify", specifier = ">=0.14.1" },
     { name = "mcp", specifier = ">=1.27.2" },
     { name = "oidcauthlib", specifier = ">=3.0.18" },
