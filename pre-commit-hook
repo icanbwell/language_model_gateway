@@ -10,4 +10,12 @@ fi
 
 GIT_PROJECT_ROOT=$(git rev-parse --show-toplevel)
 cd "$GIT_PROJECT_ROOT"
-docker build -f ./pre-commit.Dockerfile -t pre-commit-language_model_gateway . && docker run --rm --name pre-commit-run-language_model_gateway -e PRE_COMMIT_ALL_FILES=$PRE_COMMIT_ALL_FILES -v pre-commit:/.cache/pre-commit:delegated -v $(pwd)/:/sourcecode pre-commit-language_model_gateway
+
+# In a linked worktree, .git is a *file* pointing at an absolute path under the main
+# checkout's real git dir (.git/worktrees/<name>) rather than a directory -- so bind-mounting
+# just $GIT_PROJECT_ROOT leaves that absolute path unresolvable inside the container ("git
+# failed. Is it installed, and are you in a Git repository directory?"). Mount the common git
+# dir at the same absolute path so the reference resolves. For a normal (non-worktree) checkout
+# this is just $GIT_PROJECT_ROOT/.git, already covered by the bind mount below, so it's a no-op.
+GIT_COMMON_DIR=$(git rev-parse --path-format=absolute --git-common-dir)
+docker build -f ./pre-commit.Dockerfile -t pre-commit-language_model_gateway . && docker run --rm --name pre-commit-run-language_model_gateway -e PRE_COMMIT_ALL_FILES=$PRE_COMMIT_ALL_FILES -v pre-commit:/.cache/pre-commit:delegated -v "$GIT_COMMON_DIR:$GIT_COMMON_DIR" -v $(pwd)/:/sourcecode pre-commit-language_model_gateway
